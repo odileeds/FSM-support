@@ -27,11 +27,9 @@ while (my $fields = $csv->getline( $data )) {
 		$head = $i;
 		for($c = 0; $c < @f; $c++){
 			if($f[$c]){
-				print "$f[$c]\n";
 				$header{$f[$c]} = $c;
 			}
 		}
-		print Dumper %header;
 	}
 	if($head > 0 && $i > $head){
 		$postcodes{$f[$header{'Postcode'}]} = 1;
