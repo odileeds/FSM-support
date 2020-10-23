@@ -164,9 +164,10 @@
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
 			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 			var path = parea+'/'+district+'/'+sector;
+			console.log(pcd,this.postcodes.lookup[pcd]);
 			// Do we already have the postcode?
 			if(this.postcodes.lookup[pcd]){
-				if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+				if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 				return this;
 			}
 			if(!this.postcodes.loading[path]){
