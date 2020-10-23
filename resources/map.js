@@ -217,6 +217,7 @@
 					if(this.data[i]['Postcode'] && !this.postcodes.lookup[this.data[i]['Postcode']]){
 						this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
 							loaded++;
+							console.log(toload,loaded);
 							if(toload==loaded) this.addToMap();
 						});
 					}
@@ -231,6 +232,7 @@
 		}
 		
 		this.addToMap = function(){
+			console.log('addToMap');
 			var geojson = {"type": "FeatureCollection","features":[]};
 
 			function onEachFeature(feature, layer) {
