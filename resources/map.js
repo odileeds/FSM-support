@@ -129,6 +129,19 @@
 			return this;
 		}
 
+		// We have a pre-compiled list of postcodes with coordinates (to reduce load) 
+		ODI.ajax("postcodes.json",{
+			"dataType": "json",
+			"this": this,
+			"success": function(d){
+				for(var p in d) this.postcodes.lookup[p] = d[p];
+				this.init();
+			},
+			"error": function(d,attr){
+				console.error('Unable to load '+attr.url);
+			}
+		});
+
 		this.get = function(){
 			var url = 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details';
 			if(location.href.indexOf('file')==0) url = "data.csv";
@@ -151,8 +164,8 @@
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
 			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 			var path = parea+'/'+district+'/'+sector;
-			if(!this.postcodes.loading[path]){
-				this.postcodes.loading[path] = true;
+			console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
+			if(!this.postcodes.loaded[path]){
 				ODI.ajax('postcodes/'+path+'.csv',{
 					'dataType':'text/csv',
 					'this': this,
@@ -174,6 +187,8 @@
 					}
 				})
 				
+			}else{
+				if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 			}
 			return this;
 		}
@@ -194,17 +209,17 @@
 			for(var c = 0; c < d[hrow].length; c++){
 				if(d[hrow][c]) this.header[d[hrow][c]] = c;
 			}
-			var toload = 0;
-			var loaded = 0;
+			this.toload = 0;
+			this.loaded = 0;
 			var pcd;
-			console.info('Header starts on '+hrow,d,this.header);
+			console.info('Header starts on line '+hrow);
 			for(var i = hrow+1; i < d.length; i++){
 				o = {};
 				for(c = 0; c < d[i].length; c++){
 					if(typeof this.header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
 				pcd = d[i][this.header['Postcode']];
-				if(pcd && !this.postcodes.lookup[pcd]) toload++;
+				if(pcd && !this.postcodes.lookup[pcd]) this.toload++;
 				this.data.push(o);
 			}
 			list = '';
@@ -224,21 +239,19 @@
 				list += '</div>';
 				list += '</li>'
 			}
-			if(toload > loaded){
+			if(this.toload > this.loaded){
 				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
 						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
 							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
-								loaded++;
-								if(toload==loaded) this.addToMap();
+								this.loaded++;
+								if(this.toload==this.loaded) this.addToMap();
 							});
-						}else{
-							loaded++;
 						}
 					}
 				}
 			}
-			if(toload==loaded) this.addToMap();
+			if(this.toload==this.loaded) this.addToMap();
 			
 			var ul = document.getElementById('output');
 			ul.innerHTML = "<p>List contains "+this.data.length+" places:</p><ul>"+list+"</ul>";
@@ -426,8 +439,6 @@
 			
 			return popup;
 		}
-		
-		this.init();
 
 		return this;
 	}
