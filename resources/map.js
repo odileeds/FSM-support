@@ -239,6 +239,10 @@
 				list += '</div>';
 				list += '</li>'
 			}
+
+			var ul = document.getElementById('output');
+			ul.innerHTML = '<p>List contains '+this.data.length+' places<span id="maptotal"></span>:</p><ul>'+list+'</ul>';
+
 			if(this.toload > this.loaded){
 				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
@@ -253,13 +257,12 @@
 			}
 			if(this.toload==this.loaded) this.addToMap();
 			
-			var ul = document.getElementById('output');
-			ul.innerHTML = "<p>List contains "+this.data.length+" places:</p><ul>"+list+"</ul>";
 			return this;
 		}
 		
 		this.addToMap = function(){
 			var geojson = {"type": "FeatureCollection","features":[]};
+			var markerList = [];
 
 			function onEachFeature(feature, layer) {
 				popup = buildDefaultPopup(feature,"",true);
@@ -271,20 +274,42 @@
 				'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#D60303')}); },
 				'onEachFeature': onEachFeature
 			};
-			
+
+			this.nodes = L.markerClusterGroup({
+				chunkedLoading: true,
+				maxClusterRadius: 40,
+				iconCreateFunction: function (cluster) {
+					var pins = cluster.getAllChildMarkers();
+					return L.divIcon({ html: '<div class="marker-group c12-bg">'+pins.length+'</div>', className: '',iconSize: L.point(40, 40) });
+				},
+				// Disable all of the defaults:
+				spiderfyOnMaxZoom: true,
+				showCoverageOnHover: false,
+				zoomToBoundsOnClick: true
+			});
+
+			var total = 0;
 			for(var i = 0; i < this.data.length; i++){
 				pcd = this.data[i]['Postcode'];
 				if(pcd){
 					if(this.postcodes.lookup[pcd]){
-						geojson.features.push({'type':'Feature','properties':this.data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}});
+						feature = {'type':'Feature','properties':this.data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
+
+						tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,"",true));
+						markerList.push(tempmark);
+						total++;
 					}else{
 						console.error('Failed to lookup '+pcd);
 					}
 				}
 			}
-			if(this.features) this.features.remove(); 
-			this.features = L.geoJSON(geojson,geoattrs);
-			this.features.addTo(this.map);
+			
+			if(this.nodegroup) this.map.removeLayer(this.nodegroup);
+			this.nodes.addLayers(markerList);
+			this.map.addLayer(this.nodes);
+			
+			document.getElementById('maptotal').innerHTML = " ("+total+" with postcodes included on the map)";
+			
 			return this;
 		}
 		
