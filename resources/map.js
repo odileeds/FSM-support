@@ -120,6 +120,7 @@
 		this.href = a.getAttribute('href');
 		this.postcodes = {'loading':{},'loaded':{},'lookup':{}};
 		var _obj = this;
+		console.info('');
 		
 		this.init = function(){
 			var href = this.href.replace(/spreadsheets\/d\/([^\/]+)\//,function(m,p1){ _obj.sheetid = p1; return p1; });
@@ -340,19 +341,16 @@
 		function buildDefaultPopup(feature,popup,osm){
 			// does this feature have a property named popupContent?
 			if(feature.properties){
-				if(feature.properties.amenity == "bicycle_parking"){
-					popup = "<h3>Bicycle parking</h3>";
-				}else{
-					// If this feature has a default popup
-					// Convert "other_tags" e.g "\"ele:msl\"=>\"105.8\",\"ele:source\"=>\"GPS\",\"material\"=>\"stone\""
-					if(feature.properties.other_tags){
-						tags = feature.properties.other_tags.split(/,/);
-						for(var t = 0; t < tags.length; t++){
-							tags[t] = tags[t].replace(/\"/g,"");
-							bits = tags[t].split(/\=\>/);
-							if(bits.length == 2){
-								if(!feature.properties[bits[0]]) feature.properties[bits[0]] = bits[1];
-							}
+				
+				// If this feature has a default popup
+				// Convert "other_tags" e.g "\"ele:msl\"=>\"105.8\",\"ele:source\"=>\"GPS\",\"material\"=>\"stone\""
+				if(feature.properties.other_tags){
+					tags = feature.properties.other_tags.split(/,/);
+					for(var t = 0; t < tags.length; t++){
+						tags[t] = tags[t].replace(/\"/g,"");
+						bits = tags[t].split(/\=\>/);
+						if(bits.length == 2){
+							if(!feature.properties[bits[0]]) feature.properties[bits[0]] = bits[1];
 						}
 					}
 				}
@@ -363,6 +361,7 @@
 			}
 			if(!popup){
 				title = '';
+				popup += '<div class="info">';
 				if(feature.properties) title = (feature.properties.title || feature.properties.name || feature.properties.Name || '');
 				if(title) popup += '<h3>'+(title)+'</h3>';
 				var added = 0;
@@ -374,6 +373,7 @@
 						}
 					}
 				}
+				popup += '</div>';
 			}
 			if(osm) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">Something not quite right? <a href="'+_obj.href+'">Help improve the data</a>.</p>';
 			if(popup){
