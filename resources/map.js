@@ -203,10 +203,11 @@
 			for(var i = 1; i < this.data.length; i++){
 				list += '<li>';
 				list += '<div class="padded b5-bg">';
-				list += '<h3><a href="'+this.data[i]['Link to post']+'">'+this.data[i]['Name']+'</a></h3>';
+				list += '<h3>'+this.data[i]['Name']+'</h3>';
 				list += '<p>Location: '+this.data[i]['Town']+', '+this.data[i]['City/Region']+(this.data[i]['Postcode'] ? ', '+this.data[i]['Postcode'] : '')+'</p>';
 				list += '<p>How to claim: '+this.data[i]['How to claim']+'</p>';
 				list += '<p>More details: '+this.data[i]['More details']+'</p>';
+				list += '<p><a href="'+this.data[i]['Link to post']+'">Link to original post</a></p>';
 				list += '</div>';
 				list += '</li>'
 			}
