@@ -164,35 +164,36 @@
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
 			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 			var path = parea+'/'+district+'/'+sector;
-			console.log(pcd,this.postcodes.lookup[pcd]);
+			console.log('getPostcode',pcd,this.postcodes.lookup[pcd]);
 			// Do we already have the postcode?
 			if(this.postcodes.lookup[pcd]){
 				if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 				return this;
-			}
-			if(!this.postcodes.loading[path]){
-				this.postcodes.loading[path] = true;
-				ODI.ajax('postcodes/'+path+'.csv',{
-					'dataType':'text/csv',
-					'this': this,
-					'path': path,
-					'callback': callback,
-					'pcd': pcd,
-					'success':function(data,attr){
-						var r,c;
-						data = CSVToArray(data);
-						for(r = 0; r < data.length; r++){
-							if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
+			}else{
+				if(!this.postcodes.loading[path]){
+					this.postcodes.loading[path] = true;
+					ODI.ajax('postcodes/'+path+'.csv',{
+						'dataType':'text/csv',
+						'this': this,
+						'path': path,
+						'callback': callback,
+						'pcd': pcd,
+						'success':function(data,attr){
+							var r,c;
+							data = CSVToArray(data);
+							for(r = 0; r < data.length; r++){
+								if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
+							}
+							this.postcodes.loaded[attr.path] = true;
+							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+						},
+						'error': function(e,attr){
+							console.error('Unable to load '+attr.url);
+							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						}
-						this.postcodes.loaded[attr.path] = true;
-						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
-					},
-					'error': function(e,attr){
-						console.error('Unable to load '+attr.url);
-						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
-					}
-				})
-				
+					})
+					
+				}
 			}
 			return this;
 		}
@@ -243,9 +244,11 @@
 				list += '</div>';
 				list += '</li>'
 			}
+			console.log('length',this.data.length,toload,loaded);
 			if(toload > loaded){
 				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
+						console.log(i,this.data[i]['Postcode']);
 						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
 							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
 								loaded++;
@@ -257,6 +260,7 @@
 					}
 				}
 			}
+			console.log('after',toload,loaded);
 			if(toload==loaded) this.addToMap();
 			
 			var ul = document.getElementById('output');
@@ -265,6 +269,7 @@
 		}
 		
 		this.addToMap = function(){
+			console.log('addToMap')
 			var geojson = {"type": "FeatureCollection","features":[]};
 
 			function onEachFeature(feature, layer) {
