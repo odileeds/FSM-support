@@ -120,7 +120,7 @@
 		this.href = a.getAttribute('href');
 		this.postcodes = {'loading':{},'loaded':{},'lookup':{}};
 		var _obj = this;
-		console.info('');
+		console.info('Map inspired by Marcus Rashford\'s campaign for Free School Meals. Sign his petition at https://petition.parliament.uk/petitions/554276/');
 		
 		this.init = function(){
 			var href = this.href.replace(/spreadsheets\/d\/([^\/]+)\//,function(m,p1){ _obj.sheetid = p1; return p1; });
