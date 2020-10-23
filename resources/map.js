@@ -135,6 +135,7 @@
 			ODI.ajax(url,{
 				"this":this,
 				"success":function(d){
+					console.log('data',d);
 					this.update(CSVToArray(d));
 				},
 				"error":function(e){
@@ -237,7 +238,7 @@
 
 			var geoattrs = {
 				'style': { "color": "#2254F4", "weight": 2, "opacity": 0.65 },
-				'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#2254F4')}); },
+				'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#D60303')}); },
 				'onEachFeature': onEachFeature
 			};
 			
