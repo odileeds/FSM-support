@@ -129,6 +129,19 @@
 			return this;
 		}
 
+		// We have a pre-compiled list of postcodes with coordinates (to reduce load) 
+		ODI.ajax("postcodes.json",{
+			"dataType": "json",
+			"this": this,
+			"success": function(d){
+				for(var p in d) this.postcodes.lookup[p] = d[p];
+				this.init();
+			},
+			"error": function(d,attr){
+				console.error('Unable to load '+attr.url);
+			}
+		});
+
 		this.get = function(){
 			var url = 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details';
 			if(location.href.indexOf('file')==0) url = "data.csv";
@@ -426,8 +439,6 @@
 			
 			return popup;
 		}
-		
-		this.init();
 
 		return this;
 	}
