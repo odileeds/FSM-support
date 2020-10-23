@@ -212,7 +212,7 @@
 			this.toload = 0;
 			this.loaded = 0;
 			var pcd;
-			console.info('Header starts on '+hrow,d,this.header);
+			console.info('Header starts on line '+hrow);
 			for(var i = hrow+1; i < d.length; i++){
 				o = {};
 				for(c = 0; c < d[i].length; c++){
@@ -239,22 +239,18 @@
 				list += '</div>';
 				list += '</li>'
 			}
-			console.log('length',this.data.length,this.toload,this.loaded);
 			if(this.toload > this.loaded){
 				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
-						console.log(i,this.data[i]['Postcode']);
 						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
 							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
 								this.loaded++;
-								console.log('got',this.loaded,this.toload);
 								if(this.toload==this.loaded) this.addToMap();
 							});
 						}
 					}
 				}
 			}
-			console.log('after',this.toload,this.loaded);
 			if(this.toload==this.loaded) this.addToMap();
 			
 			var ul = document.getElementById('output');
@@ -263,7 +259,6 @@
 		}
 		
 		this.addToMap = function(){
-			console.log('addToMap')
 			var geojson = {"type": "FeatureCollection","features":[]};
 
 			function onEachFeature(feature, layer) {
