@@ -164,36 +164,31 @@
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
 			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 			var path = parea+'/'+district+'/'+sector;
-			console.log('getPostcode',pcd,this.postcodes.lookup[pcd]);
-			// Do we already have the postcode?
-			if(this.postcodes.lookup[pcd]){
-				if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
-				return this;
-			}else{
-				if(!this.postcodes.loading[path]){
-					this.postcodes.loading[path] = true;
-					ODI.ajax('postcodes/'+path+'.csv',{
-						'dataType':'text/csv',
-						'this': this,
-						'path': path,
-						'callback': callback,
-						'pcd': pcd,
-						'success':function(data,attr){
-							var r,c;
-							data = CSVToArray(data);
-							for(r = 0; r < data.length; r++){
-								if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
-							}
-							this.postcodes.loaded[attr.path] = true;
-							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
-						},
-						'error': function(e,attr){
-							console.error('Unable to load '+attr.url);
-							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+			console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
+			if(!this.postcodes.loaded[path]){
+				ODI.ajax('postcodes/'+path+'.csv',{
+					'dataType':'text/csv',
+					'this': this,
+					'path': path,
+					'callback': callback,
+					'pcd': pcd,
+					'success':function(data,attr){
+						var r,c;
+						data = CSVToArray(data);
+						for(r = 0; r < data.length; r++){
+							if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
 						}
-					})
-					
-				}
+						this.postcodes.loaded[attr.path] = true;
+						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+					},
+					'error': function(e,attr){
+						console.error('Unable to load '+attr.url);
+						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+					}
+				})
+				
+			}else{
+				if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 			}
 			return this;
 		}
@@ -214,8 +209,8 @@
 			for(var c = 0; c < d[hrow].length; c++){
 				if(d[hrow][c]) this.header[d[hrow][c]] = c;
 			}
-			var toload = 0;
-			var loaded = 0;
+			this.toload = 0;
+			this.loaded = 0;
 			var pcd;
 			console.info('Header starts on '+hrow,d,this.header);
 			for(var i = hrow+1; i < d.length; i++){
@@ -224,7 +219,7 @@
 					if(typeof this.header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
 				pcd = d[i][this.header['Postcode']];
-				if(pcd && !this.postcodes.lookup[pcd]) toload++;
+				if(pcd && !this.postcodes.lookup[pcd]) this.toload++;
 				this.data.push(o);
 			}
 			list = '';
@@ -244,24 +239,23 @@
 				list += '</div>';
 				list += '</li>'
 			}
-			console.log('length',this.data.length,toload,loaded);
-			if(toload > loaded){
+			console.log('length',this.data.length,this.toload,this.loaded);
+			if(this.toload > this.loaded){
 				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
 						console.log(i,this.data[i]['Postcode']);
 						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
 							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
-								loaded++;
-								if(toload==loaded) this.addToMap();
+								this.loaded++;
+								console.log('got',this.loaded,this.toload);
+								if(this.toload==this.loaded) this.addToMap();
 							});
-						}else{
-							loaded++;
 						}
 					}
 				}
 			}
-			console.log('after',toload,loaded);
-			if(toload==loaded) this.addToMap();
+			console.log('after',this.toload,this.loaded);
+			if(this.toload==this.loaded) this.addToMap();
 			
 			var ul = document.getElementById('output');
 			ul.innerHTML = "<p>List contains "+this.data.length+" places:</p><ul>"+list+"</ul>";
