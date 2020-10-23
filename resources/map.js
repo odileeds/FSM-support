@@ -183,19 +183,29 @@
 		this.update = function(d){
 			this.data = [];
 			this.header = {};
+			var hrow = 0;
+			for(var r = 0; r < d.length; r++){
+				if(d[r][0]=="Name"){
+					hrow = r;
+					r = d.length;
+				}
+			}
+			
+			
 			// Name	Town	City/Region	Postcode	Specific schools?	How to claim	Link to post	More details
-			for(var c = 0; c < d[0].length; c++){
+			for(var c = 0; c < d[hrow].length; c++){
 				// Clean first column
-				if(c==0) d[0][c] = d[0][c].replace(/^.*\. ([^\.]*)$/g,function(m,p1){ return p1; });
-				if(d[0][c]) this.header[d[0][c]] = c;
+				if(c==0) d[hrow][c] = d[hrow][c].replace(/^.*\. ([^\.]*)$/g,function(m,p1){ return p1; });
+				if(d[hrow][c]) this.header[d[hrow][c]] = c;
 			}
 			var toload = 0;
 			var loaded = 0;
 			var pcd;
-			for(var i = 1; i < d.length; i++){
+			console.info('Header starts on '+hrow);
+			for(var i = hrow+1; i < d.length; i++){
 				o = {};
 				for(c = 0; c < d[i].length; c++){
-					if(this.header[d[0][c]]) o[d[0][c]] = d[i][c];
+					if(this.header[d[hrow][c]]) o[d[hrow][c]] = d[i][c];
 				}
 				pcd = d[i][this.header['Postcode']];
 				if(pcd && !this.postcodes.lookup[pcd]) toload++;
