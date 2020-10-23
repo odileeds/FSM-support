@@ -211,10 +211,10 @@
 				list += '<li>';
 				list += '<div class="padded b5-bg">';
 				list += '<h3>'+this.data[i]['Name']+'</h3>';
-				list += '<p>Location: '+this.data[i]['Town']+', '+this.data[i]['City/Region']+(this.data[i]['Postcode'] ? ', '+this.data[i]['Postcode'] : '')+'</p>';
-				list += '<p>How to claim: '+this.data[i]['How to claim']+'</p>';
-				list += '<p>More details: '+this.data[i]['More details']+'</p>';
-				list += '<p><a href="'+this.data[i]['Link to post']+'">Link to original post</a></p>';
+				list += '<p>Location: '+(this.data[i]['Town']||"")+', '+(this.data[i]['City/Region']||"")+(this.data[i]['Postcode'] ? ', '+this.data[i]['Postcode'] : '')+'</p>';
+				if(this.data[i]['How to claim']) list += '<p>How to claim: '+this.data[i]['How to claim']+'</p>';
+				if(this.data[i]['More details']) list += '<p>More details: '+this.data[i]['More details']+'</p>';
+				if(this.data[i]['Link to post']) list += '<p><a href="'+this.data[i]['Link to post']+'">Link to original post</a></p>';
 				list += '</div>';
 				list += '</li>'
 			}
