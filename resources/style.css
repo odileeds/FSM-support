@@ -52,7 +52,8 @@ header a { text-decoration: none; }
 p, iframe, h2, h3, ul, ol, .block, .padded-bottom { margin-bottom: 16px; }
 #output li { margin-bottom: 1em; }
 #output li *:last-child { margin-bottom: 0; }
-footer .holder { margin: 2em auto; }
+.leaflet-popup-content h3 { margin-bottom: 0.25em; }
+footer .holder { margin: 1em auto; }
 footer ul { list-style: square; margin-left: 1.5em; }
 
 .c1-bg, .elsewhere .facebook:hover, .c1-bg-hover:hover, .c1-bg:visited { background-color: #2254F4; color: white; }
@@ -83,4 +84,3 @@ a.b1-bg:hover, a.b2-bg:hover, a.b3-bg:hover, a.b4-bg:hover, a.b5-bg:hover, a.b6-
 .c1-bg .button, .c2-bg .button, .c3-bg .button, .c4-bg .button, .c5-bg .button, .c6-bg .button, .c7-bg .button, .c8-bg .button, .c9-bg .button, .c10-bg .button, .c11-bg .button, .c12-bg .button, .c13-bg .button, .c14-bg .button { background-color: #efefef; color: black!important; }
 .b6-bg .button { background-color: black; color: white!important; }
 button:hover, a.button:hover, button:focus, a.button:focus { background-color: #333333!important; color: #efefef!important; }
-
