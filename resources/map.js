@@ -194,26 +194,24 @@
 			
 			// Name	Town	City/Region	Postcode	Specific schools?	How to claim	Link to post	More details
 			for(var c = 0; c < d[hrow].length; c++){
-				// Clean first column
-				if(c==0) d[hrow][c] = d[hrow][c].replace(/^.*\. ([^\.]*)$/g,function(m,p1){ return p1; });
 				if(d[hrow][c]) this.header[d[hrow][c]] = c;
 			}
 			var toload = 0;
 			var loaded = 0;
 			var pcd;
-			console.info('Header starts on '+hrow);
+			console.info('Header starts on '+hrow,d,this.header);
 			for(var i = hrow+1; i < d.length; i++){
 				o = {};
+				console.log(d[i])
 				for(c = 0; c < d[i].length; c++){
-					if(this.header[d[hrow][c]]) o[d[hrow][c]] = d[i][c];
+					if(typeof this.header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
 				pcd = d[i][this.header['Postcode']];
 				if(pcd && !this.postcodes.lookup[pcd]) toload++;
 				this.data.push(o);
 			}
-			console.info('data',this.data);
 			list = '';
-			for(var i = 1; i < this.data.length; i++){
+			for(var i = 0; i < this.data.length; i++){
 				list += '<li>';
 				list += '<div class="padded b5-bg">';
 				list += '<h3>'+this.data[i]['Name']+'</h3>';
