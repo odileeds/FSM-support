@@ -210,6 +210,7 @@
 				list += '</div>';
 				list += '</li>'
 			}
+			console.log('toload',toload,loaded);
 			if(toload > loaded){
 				for(var i = 1; i < this.data.length; i++){
 					if(this.data[i]['Postcode'] && !this.postcodes.lookup[this.data[i]['Postcode']]){
