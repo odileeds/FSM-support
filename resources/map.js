@@ -150,10 +150,8 @@
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
 			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 			var path = parea+'/'+district+'/'+sector;
-			console.log('getPostcode',pcd,path,this.postcodes.loading[path]);
 			if(!this.postcodes.loading[path]){
 				this.postcodes.loading[path] = true;
-				console.log(path);
 				ODI.ajax('postcodes/'+path+'.csv',{
 					'dataType':'text/csv',
 					'this': this,
@@ -162,7 +160,6 @@
 					'pcd': pcd,
 					'success':function(data,attr){
 						var r,c;
-						console.log(attr.path);
 						data = CSVToArray(data);
 						for(r = 0; r < data.length; r++){
 							if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
@@ -202,7 +199,6 @@
 			console.info('Header starts on '+hrow,d,this.header);
 			for(var i = hrow+1; i < d.length; i++){
 				o = {};
-				console.log(d[i])
 				for(c = 0; c < d[i].length; c++){
 					if(typeof this.header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
@@ -222,14 +218,12 @@
 				list += '</div>';
 				list += '</li>'
 			}
-			console.log('toload',toload,loaded);
 			if(toload > loaded){
 				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
 						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
 							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
 								loaded++;
-								console.log('here',toload,loaded);
 								if(toload==loaded) this.addToMap();
 							});
 						}else{
@@ -246,7 +240,6 @@
 		}
 		
 		this.addToMap = function(){
-			console.log('addToMap');
 			var geojson = {"type": "FeatureCollection","features":[]};
 
 			function onEachFeature(feature, layer) {
