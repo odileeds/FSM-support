@@ -130,7 +130,7 @@
 
 		this.get = function(){
 			var url = 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details';
-			url = "data.csv";
+			//url = "data.csv";
 			console.info('Getting '+url);
 			ODI.ajax(url,{
 				"this":this,
