@@ -130,6 +130,7 @@
 
 		this.get = function(){
 			var url = 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details';
+			//url = "data.csv";
 			console.info('Getting '+url);
 			ODI.ajax(url,{
 				"this":this,
@@ -196,6 +197,7 @@
 				if(pcd && !this.postcodes.lookup[pcd]) toload++;
 				this.data.push(o);
 			}
+			console.info('data',this.data);
 			list = '';
 			for(var i = 1; i < this.data.length; i++){
 				list += '<li>';
