@@ -214,17 +214,20 @@
 			console.log('toload',toload,loaded);
 			if(toload > loaded){
 				for(var i = 1; i < this.data.length; i++){
-					if(this.data[i]['Postcode'] && !this.postcodes.lookup[this.data[i]['Postcode']]){
-						this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
+					if(this.data[i]['Postcode']){
+						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
+							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
+								loaded++;
+								console.log(toload,loaded);
+								if(toload==loaded) this.addToMap();
+							});
+						}else{
 							loaded++;
-							console.log(toload,loaded);
-							if(toload==loaded) this.addToMap();
-						});
+						}
 					}
 				}
-			}else{
-				this.addToMap();
 			}
+			if(toload==loaded) this.addToMap();
 			
 			var ul = document.getElementById('output');
 			ul.innerHTML = list;
