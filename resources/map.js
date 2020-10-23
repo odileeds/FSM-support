@@ -153,6 +153,7 @@
 			console.log('getPostcode',pcd,path,this.postcodes.loading[path]);
 			if(!this.postcodes.loading[path]){
 				this.postcodes.loading[path] = true;
+				console.log(path);
 				ODI.ajax('postcodes/'+path+'.csv',{
 					'dataType':'text/csv',
 					'this': this,
@@ -161,6 +162,7 @@
 					'pcd': pcd,
 					'success':function(data,attr){
 						var r,c;
+						console.log(attr.path);
 						data = CSVToArray(data);
 						for(r = 0; r < data.length; r++){
 							if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
@@ -185,14 +187,16 @@
 			for(var c = 0; c < d[0].length; c++){
 				// Clean first column
 				if(c==0) d[0][c] = d[0][c].replace(/^.*\. ([^\.]*)$/g,function(m,p1){ return p1; });
-				this.header[d[0][c]] = c;
+				if(d[0][c]) this.header[d[0][c]] = c;
 			}
 			var toload = 0;
 			var loaded = 0;
 			var pcd;
 			for(var i = 1; i < d.length; i++){
 				o = {};
-				for(c = 0; c < d[i].length; c++) o[d[0][c]] = d[i][c];
+				for(c = 0; c < d[i].length; c++){
+					if(this.header[d[0][c]]) o[d[0][c]] = d[i][c];
+				}
 				pcd = d[i][this.header['Postcode']];
 				if(pcd && !this.postcodes.lookup[pcd]) toload++;
 				this.data.push(o);
@@ -212,12 +216,12 @@
 			}
 			console.log('toload',toload,loaded);
 			if(toload > loaded){
-				for(var i = 1; i < this.data.length; i++){
+				for(var i = 0; i < this.data.length; i++){
 					if(this.data[i]['Postcode']){
 						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
 							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
 								loaded++;
-								console.log(toload,loaded);
+								console.log('here',toload,loaded);
 								if(toload==loaded) this.addToMap();
 							});
 						}else{
