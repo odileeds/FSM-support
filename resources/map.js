@@ -235,7 +235,7 @@
 			if(toload==loaded) this.addToMap();
 			
 			var ul = document.getElementById('output');
-			ul.innerHTML = list;
+			ul.innerHTML = "<p>List contains "+this.data.length+" places:</p><ul>"+list+"</ul>";
 			return this;
 		}
 		
