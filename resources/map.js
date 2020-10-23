@@ -170,6 +170,7 @@
 					},
 					'error': function(e,attr){
 						console.error('Unable to load '+attr.url);
+						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 					}
 				})
 				
@@ -191,9 +192,7 @@
 			var pcd;
 			for(var i = 1; i < d.length; i++){
 				o = {};
-				for(c = 0; c < d[i].length; c++){
-					o[d[0][c]] = d[i][c];
-				}
+				for(c = 0; c < d[i].length; c++) o[d[0][c]] = d[i][c];
 				pcd = d[i][this.header['Postcode']];
 				if(pcd && !this.postcodes.lookup[pcd]) toload++;
 				this.data.push(o);
