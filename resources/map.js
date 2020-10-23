@@ -187,8 +187,8 @@
 					r = d.length;
 				}
 			}
-			
-			
+
+
 			// Name	Town	City/Region	Postcode	Specific schools?	How to claim	Link to post	More details
 			for(var c = 0; c < d[hrow].length; c++){
 				if(d[hrow][c]) this.header[d[hrow][c]] = c;
@@ -277,7 +277,7 @@
 		this.makeMap = function(){
 			this.baseMaps = {};
 			this.baseMaps['CartoDB Voyager'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+				attribution: 'Map: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
 				subdomains: 'abcd',
 				maxZoom: 19
 			});
@@ -289,7 +289,7 @@
 			this.map = L.map(id,{'layers':[this.baseMaps[this.selectedBaseMap]],'center': [53.4629,-2.2916],'zoom':6,'scrollWheelZoom':true});
 			
 			// Update attribution
-			this.map.attributionControl.setPrefix('Data: <a href="'+this.href+'">Anjali / Marcus Rashford').setPosition('bottomleft');
+			this.map.attributionControl.setPrefix('Data: <a href="'+this.href+'">Anjali / Marcus Rashford</a>').setPosition('bottomleft');
 
 			var icon = L.Icon.extend({
 				options: {
