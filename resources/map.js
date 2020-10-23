@@ -288,7 +288,7 @@
 			var mapel = this.opts.map || document.getElementById('location');
 			var id = mapel.getAttribute('id');
 			this.selectedBaseMap = "CartoDB Voyager";
-			this.map = L.map(id,{'layers':[this.baseMaps[this.selectedBaseMap]],'center': [53.4629,-2.2916],'zoom':6,'scrollWheelZoom':true});
+			this.map = L.map(id,{'layers':[this.baseMaps[this.selectedBaseMap]],'center': [53.4629,-2.2916],'zoom':5,'scrollWheelZoom':true});
 			
 			// Update attribution
 			this.map.attributionControl.setPrefix('Data: <a href="'+this.href+'">Anjali / Marcus Rashford').setPosition('bottomleft');
