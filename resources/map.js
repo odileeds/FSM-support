@@ -116,12 +116,13 @@
 		this.sheetid = "";
 		if(!opts) opts = {};
 		this.opts = opts;
-		this.el;
-		var href = a.getAttribute('href');
+		this.el = a;
+		this.href = a.getAttribute('href');
+		this.postcodes = {'loading':{},'loaded':{},'lookup':{}};
 		var _obj = this;
 		
 		this.init = function(){
-			href = href.replace(/spreadsheets\/d\/([^\/]+)\//,function(m,p1){ _obj.sheetid = p1; return p1; });
+			var href = this.href.replace(/spreadsheets\/d\/([^\/]+)\//,function(m,p1){ _obj.sheetid = p1; return p1; });
 			this.makeMap();
 			this.get();
 			return this;
@@ -143,25 +144,114 @@
 			return this;
 		}
 		
-		this.update = function(){
-			var header = {};
+		this.getPostcode = function(pcd,callback){
+			var ocd,parea,district,sector;
+			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
+			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
+			var path = parea+'/'+district+'/'+sector+'.csv';
+			if(!this.postcodes.loading[path]){
+				this.postcodes.loading[path] = true;
+				ODI.ajax('postcodes/'+path,{
+					'dataType':'text/csv',
+					'this': this,
+					'path': path,
+					'callback': callback,
+					'pcd': pcd,
+					'success':function(data,attr){
+						var r,c;
+						data = CSVToArray(data);
+						for(r = 0; r < data.length; r++){
+							if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
+						}
+						this.postcodes.loaded[attr.path] = true;
+						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+					},
+					'error': function(e,attr){
+						console.error('Unable to load '+attr.url);
+					}
+				})
+				
+			}
+			return this;
+		}
+		
+		this.update = function(d){
+			this.data = [];
+			this.header = {};
 			// Name	Town	City/Region	Postcode	Specific schools?	How to claim	Link to post	More details
 			for(var c = 0; c < d[0].length; c++){
 				// Clean first column
 				if(c==0) d[0][c] = d[0][c].replace(/^.*\. ([^\.]*)$/g,function(m,p1){ return p1; });
-				header[d[0][c]] = c;
+				this.header[d[0][c]] = c;
+			}
+			var toload = 0;
+			var loaded = 0;
+			var pcd;
+			for(var i = 1; i < d.length; i++){
+				o = {};
+				for(c = 0; c < d[i].length; c++){
+					o[d[0][c]] = d[i][c];
+				}
+				pcd = d[i][this.header['Postcode']];
+				if(pcd && !this.postcodes.lookup[pcd]) toload++;
+				this.data.push(o);
 			}
 			list = '';
-			for(var i = 1; i < d.length; i++){
-				list += '<li class="postit">';
-				list += '<div>';
-				list += '<h3>'+d[i][header['Name']]+'</h3>';
+			for(var i = 1; i < this.data.length; i++){
+				list += '<li>';
+				list += '<div class="padded b5-bg">';
+				list += '<h3><a href="'+this.data[i]['Link to post']+'">'+this.data[i]['Name']+'</a></h3>';
+				list += '<p>Location: '+this.data[i]['Town']+', '+this.data[i]['City/Region']+(this.data[i]['Postcode'] ? ', '+this.data[i]['Postcode'] : '')+'</p>';
+				list += '<p>How to claim: '+this.data[i]['How to claim']+'</p>';
+				list += '<p>More details: '+this.data[i]['More details']+'</p>';
 				list += '</div>';
 				list += '</li>'
+			}
+			if(toload > loaded){
+				for(var i = 1; i < this.data.length; i++){
+					if(this.data[i]['Postcode'] && !this.postcodes.lookup[this.data[i]['Postcode']]){
+						this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
+							loaded++;
+							if(toload==loaded) this.addToMap();
+						});
+					}
+				}
+			}else{
+				this.addToMap();
 			}
 			
 			var ul = document.getElementById('output');
 			ul.innerHTML = list;
+			return this;
+		}
+		
+		this.addToMap = function(){
+			var geojson = {"type": "FeatureCollection","features":[]};
+
+			function onEachFeature(feature, layer) {
+				popup = buildDefaultPopup(feature,"",true);
+				if(popup) layer.bindPopup(popup);
+			}
+
+			var geoattrs = {
+				'style': { "color": "#2254F4", "weight": 2, "opacity": 0.65 },
+				'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#2254F4')}); },
+				'onEachFeature': onEachFeature
+			};
+			
+			for(var i = 0; i < this.data.length; i++){
+				pcd = this.data[i]['Postcode'];
+				if(pcd){
+					if(this.postcodes.lookup[pcd]){
+						geojson.features.push({'type':'Feature','properties':this.data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}});
+					}else{
+						console.error('Failed to lookup '+pcd);
+					}
+				}
+			}
+			if(this.features) this.features.remove(); 
+			this.features = L.geoJSON(geojson,geoattrs);
+			this.features.addTo(this.map);
 			return this;
 		}
 		
@@ -180,7 +270,7 @@
 			this.map = L.map(id,{'layers':[this.baseMaps[this.selectedBaseMap]],'center': [53.4629,-2.2916],'zoom':6,'scrollWheelZoom':true});
 			
 			// Update attribution
-			this.map.attributionControl.setPrefix('Map').setPosition('bottomleft');
+			this.map.attributionControl.setPrefix('Data: <a href="'+this.href+'">Anjali / Marcus Rashford').setPosition('bottomleft');
 
 			var icon = L.Icon.extend({
 				options: {
@@ -266,7 +356,7 @@
 					}
 				}
 			}
-			if(osm) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">Something not quite right? <a href="http://www.openstreetmap.org/edit?pk_campaign=odileeds-edit'+(feature.geometry.type == "Point" ? '&node=%osm_id%':'')+(feature.geometry.type == "Polygon" ? '&way=%osm_way_id%' : '')+'#map=%Zoom%/%Latitude%/%Longitude%">Help improve the data on OpenStreetMap</a>.</p>';
+			if(osm) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">Something not quite right? <a href="'+_obj.href+'">Help improve the data</a>.</p>';
 			if(popup){
 				if(popup.indexOf("{{") >= 0){
 					//popup = popup.replace(new RegExp(/\%IF ([^\s]+) (.*) ENDIF\%/,"g"),function(str,p1,p2){ return (feature.properties[p1] && feature.properties[p1] != "N/a" ? p2 : ''); });
@@ -377,63 +467,11 @@
 		
 		
 		var a = document.querySelector('a.sheet-link');
-		console.log(a)
 		var href = a.getAttribute('href');
 		if(href.indexOf('https://docs.google.com/spreadsheets')==0){
 			fsm = new ODI.FSM(a,{'map':document.getElementById('location')});
 		}
-/*
-		console.log('here',ODI.ajax)
-		ODI.ajax('https://raw.githubusercontent.com/odileeds/west-yorkshire-mapping/master/data/leeds/leeds-amenities-bicycle_parking.geojson',{
-			'dataType':'json',
-			'success':function(d){	
 
-				function onEachFeature(feature, layer) {
-					popup = buildDefaultPopup(feature,"",true);
-					if(popup) layer.bindPopup(popup);
-				}
-
-				var geoattrs = {
-					'style': { "color": "#2254F4", "weight": 2, "opacity": 0.65 },
-					'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#2254F4')}); },
-					'onEachFeature': onEachFeature
-				};
-				bike = L.geoJSON(d,geoattrs);
-				bike.addTo(map);
-			}
-		})
-		ODI.ajax('https://raw.githubusercontent.com/odileeds/west-yorkshire-mapping/master/data/leeds/leeds-amenities-parking.geojson',{
-			'dataType':'json',
-			'success':function(d){	
-				function onEachFeature(feature, layer) {
-					popup = buildDefaultPopup(feature,"",true);
-					if(popup) layer.bindPopup(popup);
-				}
-				var geoattrs = {
-					'style': { "color": "#FF6700", "weight": 2, "opacity": 0.65 },
-					'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#FF6700')}); },
-					'onEachFeature': onEachFeature
-				};
-				car = L.geoJSON(d,geoattrs);
-				car.addTo(map);
-			}
-		})
-		ODI.ajax('/location/busstops.geojson',{
-			'dataType':'json',
-			'success':function(d){	
-				function onEachFeature(feature, layer) {
-					popup = buildDefaultPopup(feature,"");
-					if(popup) layer.bindPopup(popup);
-				}
-				var geoattrs = {
-					'style': { "color": "#0DBC37", "weight": 2, "opacity": 0.65 },
-					'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#0DBC37')}); },
-					'onEachFeature': onEachFeature
-				};
-				bus = L.geoJSON(d,geoattrs);
-				bus.addTo(map);
-			}
-		})*/
 	});
 
 })(window || this);

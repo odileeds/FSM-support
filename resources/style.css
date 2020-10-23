@@ -49,9 +49,11 @@ button, .button { border: 0px; font-size: 1em; background-color: #efefef; color:
 a:hover, a:focus { text-decoration: underline; }
 a:visited { color: inherit; }
 header a { text-decoration: none; }
-footer { width: 100%; padding: 2em 1em; padding-bottom: 3em; }
-footer h2 { margin-bottom: 1em; }
-footer p { margin-bottom: 1em; }
+p, iframe, h2, h3, ul, ol, .block, .padded-bottom { margin-bottom: 16px; }
+#output li { margin-bottom: 1em; }
+#output li *:last-child { margin-bottom: 0; }
+footer .holder { margin: 2em auto; }
+footer ul { list-style: square; margin-left: 1.5em; }
 
 .c1-bg, .elsewhere .facebook:hover, .c1-bg-hover:hover, .c1-bg:visited { background-color: #2254F4; color: white; }
 .c2-bg, .c2-bg-hover:hover, .c2-bg:visited { background-color: #178CFF; color: black; }
