@@ -130,12 +130,11 @@
 
 		this.get = function(){
 			var url = 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details';
-			//url = "data.csv";
+			url = "data.csv";
 			console.info('Getting '+url);
 			ODI.ajax(url,{
 				"this":this,
 				"success":function(d){
-					console.log('data',d);
 					this.update(CSVToArray(d));
 				},
 				"error":function(e){
@@ -151,6 +150,7 @@
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
 			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 			var path = parea+'/'+district+'/'+sector+'.csv';
+			console.log('getPostcode',pcd,path,this.postcodes.loading[path]);
 			if(!this.postcodes.loading[path]){
 				this.postcodes.loading[path] = true;
 				ODI.ajax('postcodes/'+path,{
