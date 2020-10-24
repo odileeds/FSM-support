@@ -62,14 +62,16 @@ foreach $pcd (sort(keys(%postcodes))){
 		$path = $area."/".$district."/".$icd;
 		
 		$pfile = $dir."postcodes/$path.csv";
-		open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
-		while (my $fields = $csv->getline( $data )) {
-			if($fields->[0] eq $pcd){
-				$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
-				$added++;
+		if(-e){
+			open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
+			while (my $fields = $csv->getline( $data )) {
+				if($fields->[0] eq $pcd){
+					$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
+					$added++;
+				}
 			}
+			close $data;
 		}
-		close $data;
 	}
 }
 $json .= "}\n";
