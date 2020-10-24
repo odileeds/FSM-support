@@ -3,11 +3,19 @@
 use Text::CSV;
 use Data::Dumper;
 
+
 $url = "https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details";
 $file = "data.csv";
 
-if(time() - (stat $file)[9] >= 600){ 
-	`wget -q --no-check-certificate -O "$file" "$url"`;
+
+# Get directory
+$dir = $0;
+if($dir =~ /\//){ $dir =~ s/^(.*)\/([^\/]*)/$1/g; }
+else{ $dir = "./"; }
+
+
+if(time() - (stat $dir.$file)[9] >= 600){ 
+	`wget -q --no-check-certificate -O "$dir$file" "$url"`;
 }
 
 my $csv = Text::CSV->new ({
@@ -19,7 +27,7 @@ my $csv = Text::CSV->new ({
 %postcodes;
 %header;
 $head = -1;
-open(my $data, '<:encoding(utf8)', $file) or die "Could not open '$file' $!\n";
+open(my $data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
 while (my $fields = $csv->getline( $data )) {
 	@f = @{$fields};
 	$n = @f;
@@ -53,8 +61,8 @@ foreach $pcd (sort(keys(%postcodes))){
 		$district = $2;
 		$path = $area."/".$district."/".$icd;
 		
-		$pfile = "postcodes/$path.csv";
-		open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$file' $!\n";
+		$pfile = $dir."postcodes/$path.csv";
+		open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
 		while (my $fields = $csv->getline( $data )) {
 			if($fields->[0] eq $pcd){
 				$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
@@ -66,6 +74,6 @@ foreach $pcd (sort(keys(%postcodes))){
 }
 $json .= "}\n";
 
-open(FILE,">","postcodes.json");
+open(FILE,">",$dir."postcodes.json");
 print FILE $json;
 close(FILE);
