@@ -3,10 +3,9 @@
 use Text::CSV;
 use Data::Dumper;
 
-
 $url = "https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details";
 $file = "data.csv";
-
+$imdfile = "imd/imd.csv";
 
 # Get directory
 $dir = $0;
@@ -24,9 +23,35 @@ my $csv = Text::CSV->new ({
 	sep_char  => ','    # not really needed as this is the default
 });
 
+open(my $data, '<:encoding(utf8)', $dir.$imdfile) or die "Could not open '$dir$file' $!\n";
+$head = -1;
+$i = 0;
+%lsoa;
+while (my $fields = $csv->getline( $data )) {
+	@f = @{$fields};
+	$n = @f;
+	if($fields->[0] eq "LSOA code (2011)" && $head < 0){
+		$head = $i;
+		for($c = 0; $c < @f; $c++){
+			if($f[$c]){
+				$header{$f[$c]} = $c;
+			}
+		}
+	}
+	if($head >= 0 && $i > $head){
+		$lsoa{$f[$header{'LSOA code (2011)'}]} = $f[$header{'Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs)'}];
+	}
+	$i++;
+}
+if (not $csv->eof) {
+  $csv->error_diag();
+}
+close(FILE);
+
 %postcodes;
 %header;
 $head = -1;
+$i = 0;
 open(my $data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
 while (my $fields = $csv->getline( $data )) {
 	@f = @{$fields};
@@ -49,6 +74,7 @@ if (not $csv->eof) {
 }
 close $data;
 
+%imd;
 $added = 0;
 $json = "{\n";
 foreach $pcd (sort(keys(%postcodes))){
@@ -62,10 +88,13 @@ foreach $pcd (sort(keys(%postcodes))){
 		$path = $area."/".$district."/".$icd;
 		
 		$pfile = $dir."postcodes/$path.csv";
-		if(-e){
+		if(-e $pfile){
 			open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
 			while (my $fields = $csv->getline( $data )) {
 				if($fields->[0] eq $pcd){
+					$decile = $lsoa{$fields->[3]};
+					if(!$imd{$decile}){ $imd{$decile} = 0; }
+					$imd{$decile}++;
 					$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
 					$added++;
 				}
@@ -75,6 +104,13 @@ foreach $pcd (sort(keys(%postcodes))){
 	}
 }
 $json .= "}\n";
+
+open(FILE,">",$dir."imd/summary.csv");
+print FILE "Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs),Number of offers of support\n";
+for($i = 1 ; $i <= 10; $i++){
+	print FILE "$i,$imd{$i}\n";
+}
+close(FILE);
 
 open(FILE,">",$dir."postcodes.json");
 print FILE $json;
