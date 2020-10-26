@@ -223,6 +223,7 @@
 			console.info('Header starts on line '+hrow);
 			for(var i = hrow+1; i < d.length; i++){
 				o = {};
+				if(d[i][this.header['Postcode']]) d[i][this.header['Postcode']] = d[i][this.header['Postcode']].toUpperCase();
 				for(c = 0; c < d[i].length; c++){
 					if(typeof this.header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
