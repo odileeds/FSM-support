@@ -92,14 +92,22 @@ foreach $pcd (sort(keys(%postcodes))){
 			open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
 			while (my $fields = $csv->getline( $data )) {
 				if($fields->[0] eq $pcd){
-					$decile = $lsoa{$fields->[3]};
-					if(!$imd{$decile}){ $imd{$decile} = 0; }
-					$imd{$decile}++;
+					$decile = sprintf("%2d",$lsoa{$fields->[3]});
+					if($lsoa{$fields->[3]} < 1){
+						if(!$imd{'?'}){ $imd{'?'} = 0; }
+						$imd{'?'}++;
+					}else{
+						if(!$imd{$decile}){ $imd{$decile} = 0; }
+						$imd{$decile}++;
+					}
 					$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
 					$added++;
 				}
 			}
 			close $data;
+		}else{
+			if(!$imd{'?'}){ $imd{'?'} = 0; }
+			$imd{'?'}++;
 		}
 	}
 }
@@ -107,8 +115,10 @@ $json .= "}\n";
 
 open(FILE,">",$dir."imd/summary.csv");
 print FILE "Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs),Number of offers of support\n";
-for($i = 1 ; $i <= 10; $i++){
-	print FILE "$i,$imd{$i}\n";
+foreach $key (sort(keys(%imd))){
+	$k = $key;
+	$k =~ s/^ //g;
+	print FILE "$k,$imd{$key}\n";
 }
 close(FILE);
 
