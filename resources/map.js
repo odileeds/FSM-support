@@ -162,34 +162,42 @@
 		this.getPostcode = function(pcd,callback){
 			var ocd,parea,district,sector;
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
-			ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
-			var path = parea+'/'+district+'/'+sector;
-			console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
-			if(!this.postcodes.loaded[path]){
-				ODI.ajax('postcodes/'+path+'.csv',{
-					'dataType':'text/csv',
-					'this': this,
-					'path': path,
-					'callback': callback,
-					'pcd': pcd,
-					'success':function(data,attr){
-						var r,c;
-						data = CSVToArray(data);
-						for(r = 0; r < data.length; r++){
-							if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
+			if(ocd){
+				ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
+				var path = parea+'/'+district+'/'+sector;
+				console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
+				if(!this.postcodes.loaded[path]){
+					ODI.ajax('postcodes/'+path+'.csv',{
+						'dataType':'text/csv',
+						'this': this,
+						'path': path,
+						'callback': callback,
+						'pcd': pcd,
+						'success':function(data,attr){
+							var r,c;
+							data = CSVToArray(data);
+							for(r = 0; r < data.length; r++){
+								if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
+							}
+							this.postcodes.loaded[attr.path] = true;
+							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
+						},
+						'error': function(e,attr){
+							console.error('Unable to load '+attr.url);
+							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						}
-						this.postcodes.loaded[attr.path] = true;
-						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
-					},
-					'error': function(e,attr){
-						console.error('Unable to load '+attr.url);
-						if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
-					}
-				})
+					})
+					
+				}else{
+					console.warn('No path '+path);
+					if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
+				}
 				
 			}else{
+				console.warn('No outcode in '+pcd);
 				if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 			}
+			
 			return this;
 		}
 		
