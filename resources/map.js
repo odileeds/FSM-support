@@ -165,7 +165,7 @@
 			if(ocd){
 				ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 				var path = parea+'/'+district+'/'+sector;
-				console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
+				//console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
 				if(!this.postcodes.loaded[path]){
 					ODI.ajax('postcodes/'+path+'.csv',{
 						'dataType':'text',
