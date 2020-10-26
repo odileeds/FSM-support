@@ -4,7 +4,7 @@
 use Data::Dumper;
 
 @categories = @ARGV;
-if(!@categories){ @categories = ("lat","long"); }
+if(!@categories){ @categories = ("lat","long","lsoa11"); }
 $odir = "postcodes/";
 $file = "NSPL/Data/NSPL_AUG_2020_UK.csv";
 
@@ -60,6 +60,8 @@ while(my $line = <FILE>){
 					$v = sprintf("%0.5f",$v);
 					# Remove trailing zeros
 					$v =~ s/0+$//g;
+				}elsif($categories[$c] eq "lsoa11"){
+					$v =~ s/(^\"|\"$)//g;
 				}
 				$str .= ",$v";
 			}
