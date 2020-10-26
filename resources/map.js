@@ -168,7 +168,7 @@
 				console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
 				if(!this.postcodes.loaded[path]){
 					ODI.ajax('postcodes/'+path+'.csv',{
-						'dataType':'text/csv',
+						'dataType':'text',
 						'this': this,
 						'path': path,
 						'callback': callback,
@@ -183,7 +183,7 @@
 							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						},
 						'error': function(e,attr){
-							console.error('Unable to load '+attr.url);
+							console.error('Unable to load '+attr.url+' for '+attr.pcd);
 							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						}
 					})
