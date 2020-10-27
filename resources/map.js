@@ -374,27 +374,6 @@
 				}
 			});
 
-			var icons = {
-				'black': new icon({iconUrl: '/resources/images/marker.svg'}),
-				'c-1': new icon({iconUrl: '/resources/images/marker-1.svg'}),
-				'c-2': new icon({iconUrl: '/resources/images/marker-2.svg'}),
-				'c-3': new icon({iconUrl: '/resources/images/marker-3.svg'}),
-				'c-4': new icon({iconUrl: '/resources/images/marker-4.svg'}),
-				'c-5': new icon({iconUrl: '/resources/images/marker-5.svg'}),
-				'c-6': new icon({iconUrl: '/resources/images/marker-6.svg'}),
-				'c-7': new icon({iconUrl: '/resources/images/marker-7.svg'}),
-				'c-8': new icon({iconUrl: '/resources/images/marker-8.svg'}),
-				'c-9': new icon({iconUrl: '/resources/images/marker-9.svg'}),
-				'c-10': new icon({iconUrl: '/resources/images/marker-10.svg'}),
-				'c-11': new icon({iconUrl: '/resources/images/marker-11.svg'}),
-				'c-12': new icon({iconUrl: '/resources/images/marker-12.svg'}),
-				'c-13': new icon({iconUrl: '/resources/images/marker-13.svg'}),
-				'c-14': new icon({iconUrl: '/resources/images/marker-14.svg'}),
-				's-1': new icon({iconUrl: '/resources/images/marker-s1.svg'}),
-				's-2': new icon({iconUrl: '/resources/images/marker-s2.svg'}),
-				's-3': new icon({iconUrl: '/resources/images/marker-s3.svg'}),
-				'seasonal': new icon({iconUrl: '/resources/images/marker-seasonal.svg'})
-			}
 			return this;
 		}
 
