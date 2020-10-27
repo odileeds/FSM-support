@@ -1,6 +1,6 @@
 # Indices of Mulitple Deprivation
 
-We use the data from Anjali's Google Sheet (the only FSM support sheet which is open) to examine [how well offers are targetting areas of deprivation](summary.csv).
+We use the data from [Anjali's Google Sheet](https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/edit#gid=0) (the only FSM support spreadsheet which is currently open) to examine [how well offers are targetting areas of deprivation](summary.csv).
 
 ## Method
 
