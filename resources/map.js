@@ -143,18 +143,43 @@
 		});
 
 		this.get = function(){
-			var url = 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details';
-			if(location.href.indexOf('file')==0) url = "data.csv";
-			console.info('Getting '+url);
-			ODI.ajax(url,{
-				"this":this,
-				"success":function(d){
-					this.update(CSVToArray(d));
-				},
-				"error":function(e){
-					console.error('Unable to load sheet',e);
-				}
-			});
+			// Reset the data
+			this.data = [];
+			this.header = {};
+			this.toload = 0;
+			this.loaded = 0;
+
+			this.sources = {
+				'anjali': {
+					'name': 'Google Sheet',
+					'url': (location.href.indexOf('file')==0 ? 'data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
+					'data': [],
+					'header': {},
+					'edit': 'Something not quite right? <a href="'+this.href+'">Help improve the data</a>'
+				}/*,
+				'alltogether': {
+					'name': 'All Of Us Together',
+					'url': 'all-of-us-together.csv',
+					'data': [],
+					'header': {},
+					'edit': 'Data from: All Of Us Together'
+				}*/
+			};
+
+			for(var src in this.sources){
+				console.info('Getting '+this.sources[src].url);
+				ODI.ajax(this.sources[src].url,{
+					"dataType": "text",
+					"this":this,
+					"src": src,
+					"success":function(d,attr){
+						this.update(CSVToArray(d),attr.src);
+					},
+					"error":function(e){
+						console.error('Unable to load sheet',e);
+					}
+				});
+			}
 			setTimeout(function(){ _obj.get(); },300000);
 			return this;
 		}
@@ -166,7 +191,7 @@
 				ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 				var path = parea+'/'+district+'/'+sector;
 				//console.log('getPostcode',pcd,this.postcodes.lookup[pcd],this.postcodes.loaded[path]);
-				if(!this.postcodes.loaded[path]){
+				if(parea && district && !this.postcodes.loaded[path]){
 					ODI.ajax('postcodes/'+path+'.csv',{
 						'dataType':'text',
 						'this': this,
@@ -183,7 +208,7 @@
 							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						},
 						'error': function(e,attr){
-							console.error('Unable to load '+attr.url+' for '+attr.pcd);
+							console.error('Unable to load '+attr.url+' for /'+attr.pcd+'/');
 							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						}
 					})
@@ -201,9 +226,8 @@
 			return this;
 		}
 		
-		this.update = function(d){
-			this.data = [];
-			this.header = {};
+		this.update = function(d,src){
+			
 			var hrow = 0;
 			for(var r = 0; r < d.length; r++){
 				if(d[r][0]=="Name"){
@@ -212,37 +236,37 @@
 				}
 			}
 
-
 			// Name	Town	City/Region	Postcode	Specific schools?	How to claim	Link to post	More details
 			for(var c = 0; c < d[hrow].length; c++){
-				if(d[hrow][c]) this.header[d[hrow][c]] = c;
+				if(d[hrow][c]) this.sources[src].header[d[hrow][c]] = c;
 			}
-			this.toload = 0;
-			this.loaded = 0;
 			var pcd;
 			console.info('Header starts on line '+hrow);
 			for(var i = hrow+1; i < d.length; i++){
 				o = {};
-				if(d[i][this.header['Postcode']]) d[i][this.header['Postcode']] = d[i][this.header['Postcode']].toUpperCase();
+				if(d[i][this.sources[src].header['Postcode']]) d[i][this.sources[src].header['Postcode']] = d[i][this.sources[src].header['Postcode']].toUpperCase();
 				for(c = 0; c < d[i].length; c++){
-					if(typeof this.header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
+					if(typeof this.sources[src].header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
-				pcd = d[i][this.header['Postcode']];
+				pcd = d[i][this.sources[src].header['Postcode']];
 				if(pcd && !this.postcodes.lookup[pcd]) this.toload++;
-				this.data.push(o);
+				this.sources[src].data.push(o);
 			}
 			list = '';
-			for(var i = 0; i < this.data.length; i++){
+			for(var i = 0; i < this.sources[src].data.length; i++){
 				list += '<li>';
 				list += '<div class="padded b5-bg">';
-				list += '<h3>'+this.data[i]['Name']+'</h3>';
-				list += '<p>Location: '+(this.data[i]['Town']||"")+', '+(this.data[i]['City/Region']||"")+(this.data[i]['Postcode'] ? ', '+this.data[i]['Postcode'] : '')+'</p>';
-				if(this.data[i]['How to claim']) list += '<p>How to claim: '+this.data[i]['How to claim']+'</p>';
-				if(this.data[i]['More details']) list += '<p>More details: '+this.data[i]['More details']+'</p>';
-				if(this.data[i]['Link to post']){
-					list += '<p><a href="'+this.data[i]['Link to post']+'">Link to original post';
-					if(this.data[i]['Link to post'].indexOf('twitter.com')>0) list += ' on Twitter';
-					if(this.data[i]['Link to post'].indexOf('facebook.com')>0) list += ' on Facebook';
+				list += '<h3>'+this.sources[src].data[i]['Name']+'</h3>';
+				list += '<p>Location: '+(this.sources[src].data[i]['Town']||"");
+				if(this.sources[src].data[i]['City/Region']) list += ', '+(this.sources[src].data[i]['City/Region']);
+				if(this.sources[src].data[i]['Postcode']) list += ', '+this.sources[src].data[i]['Postcode'];
+				list += '</p>';
+				if(this.sources[src].data[i]['How to claim']) list += '<p>How to claim: '+this.sources[src].data[i]['How to claim']+'</p>';
+				if(this.sources[src].data[i]['More details']) list += '<p>More details: '+this.sources[src].data[i]['More details']+'</p>';
+				if(this.sources[src].data[i]['Link to post']){
+					list += '<p><a href="'+this.sources[src].data[i]['Link to post']+'">Link to original post';
+					if(this.sources[src].data[i]['Link to post'].indexOf('twitter.com')>0) list += ' on Twitter';
+					if(this.sources[src].data[i]['Link to post'].indexOf('facebook.com')>0) list += ' on Facebook';
 					list += '</a></p>';
 				}
 				list += '</div>';
@@ -250,13 +274,13 @@
 			}
 
 			var ul = document.getElementById('output');
-			ul.innerHTML = '<p>List contains '+this.data.length+' places<span id="maptotal"></span>:</p><ul>'+list+'</ul>';
+			ul.innerHTML = '<p>List contains '+this.sources[src].data.length+' places<span id="maptotal"></span>:</p><ul>'+list+'</ul>';
 
 			if(this.toload > this.loaded){
-				for(var i = 0; i < this.data.length; i++){
-					if(this.data[i]['Postcode']){
-						if(!this.postcodes.lookup[this.data[i]['Postcode']]){
-							this.getPostcode(this.data[i]['Postcode'],function(pcd,pos){
+				for(var i = 0; i < this.sources[src].data.length; i++){
+					if(this.sources[src].data[i]['Postcode']){
+						if(!this.postcodes.lookup[this.sources[src].data[i]['Postcode']]){
+							this.getPostcode(this.sources[src].data[i]['Postcode'],function(pcd,pos){
 								this.loaded++;
 								if(this.toload==this.loaded) this.addToMap();
 							});
@@ -273,15 +297,13 @@
 			var geojson = {"type": "FeatureCollection","features":[]};
 			var markerList = [];
 
-			function onEachFeature(feature, layer) {
-				popup = buildDefaultPopup(feature,"",true);
-				if(popup) layer.bindPopup(popup);
-			}
-
 			var geoattrs = {
 				'style': { "color": "#2254F4", "weight": 2, "opacity": 0.65 },
 				'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#D60303')}); },
-				'onEachFeature': onEachFeature
+				'onEachFeature': function(feature, layer) {
+					popup = buildDefaultPopup(feature,"");
+					if(popup) layer.bindPopup(popup);
+				}
 			};
 
 			this.nodes = L.markerClusterGroup({
@@ -298,21 +320,23 @@
 			});
 
 			var total = 0;
-			for(var i = 0; i < this.data.length; i++){
-				pcd = this.data[i]['Postcode'];
-				if(pcd){
-					if(this.postcodes.lookup[pcd]){
-						feature = {'type':'Feature','properties':this.data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
-
-						tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,"",true));
-						markerList.push(tempmark);
-						total++;
-					}else{
-						console.error('Failed to lookup '+pcd);
+			var src,i;
+			for(src in this.sources){
+				for(i = 0; i < this.sources[src].data.length; i++){
+					pcd = this.sources[src].data[i]['Postcode'];
+					if(pcd){
+						if(this.postcodes.lookup[pcd]){
+							feature = {'type':'Feature','properties':this.sources[src].data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
+							feature.properties._src = this.sources[src];
+							tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,""));
+							markerList.push(tempmark);
+							total++;
+						}else{
+							console.error('Failed to lookup '+pcd+' from '+this.sources[src].name);
+						}
 					}
 				}
 			}
-			
 			if(this.nodegroup) this.map.removeLayer(this.nodegroup);
 			this.nodes.addLayers(markerList);
 			this.map.addLayer(this.nodes);
@@ -385,7 +409,7 @@
 				popupAnchor:	[0, -41] // point from which the popup should open relative to the iconAnchor
 			});
 		}
-		function buildDefaultPopup(feature,popup,osm){
+		function buildDefaultPopup(feature,popup){
 			// does this feature have a property named popupContent?
 			if(feature.properties){
 				
@@ -422,7 +446,7 @@
 				}
 				popup += '</div>';
 			}
-			if(osm) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">Something not quite right? <a href="'+_obj.href+'">Help improve the data</a>.</p>';
+			if(feature.properties._src.edit) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">'+feature.properties._src.edit+'</p>';
 			if(popup){
 				if(popup.indexOf("{{") >= 0){
 					//popup = popup.replace(new RegExp(/\%IF ([^\s]+) (.*) ENDIF\%/,"g"),function(str,p1,p2){ return (feature.properties[p1] && feature.properties[p1] != "N/a" ? p2 : ''); });
