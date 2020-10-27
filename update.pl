@@ -54,6 +54,7 @@ $head = -1;
 $i = 0;
 open(my $data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
 while (my $fields = $csv->getline( $data )) {
+
 	@f = @{$fields};
 	$n = @f;
 	if($fields->[0] eq "Name" && $head < 0){
@@ -64,7 +65,7 @@ while (my $fields = $csv->getline( $data )) {
 			}
 		}
 	}
-	if($head > 0 && $i > $head){
+	if($head >= 0 && $i > $head){
 		$postcodes{$f[$header{'Postcode'}]} = 1;
 	}
 	$i++;
