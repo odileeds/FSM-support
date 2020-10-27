@@ -151,7 +151,7 @@
 
 			this.sources = {
 				'anjali': {
-					'name': 'Google Sheet',
+					'name': 'Anjali / Marcus Rashford',
 					'url': (location.href.indexOf('file')==0 ? 'data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
 					'data': [],
 					'header': {},
@@ -322,6 +322,7 @@
 			var total = 0;
 			var src,i;
 			var totallist = 0;
+			var attrib = "";
 			for(src in this.sources){
 				for(i = 0; i < this.sources[src].data.length; i++){
 					pcd = this.sources[src].data[i]['Postcode'];
@@ -338,6 +339,7 @@
 						}
 					}
 				}
+				attrib += (attrib ? ' / ' : '')+'<a href="'+this.sources[src].url+'">'+this.sources[src].name+'</a>';
 			}
 			if(this.nodegroup) this.map.removeLayer(this.nodegroup);
 			this.nodes.addLayers(markerList);
@@ -345,7 +347,9 @@
 			
 			document.getElementById('maptotal').innerHTML = " ("+total+" with postcodes included on the map)";
 			document.getElementById('listtotal').innerHTML = totallist;
-			
+			// Update attribution
+			this.map.attributionControl.setPrefix('Data: '+attrib);
+
 			return this;
 		}
 		
