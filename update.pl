@@ -49,66 +49,10 @@ if (not $csv->eof) {
 }
 close(FILE);
 
-
-
-######################
-# Open Anjali's sheet
 %postcodes;
-%header;
-$head = -1;
-$i = 0;
-open(my $data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
-while (my $fields = $csv->getline( $data )) {
 
-	@f = @{$fields};
-	$n = @f;
-	if($fields->[0] eq "Name" && $head < 0){
-		$head = $i;
-		for($c = 0; $c < @f; $c++){
-			if($f[$c]){
-				$header{$f[$c]} = $c;
-			}
-		}
-	}
-	if($head >= 0 && $i > $head){
-		$postcodes{$f[$header{'Postcode'}]} = 1;
-	}
-	$i++;
-}
-if (not $csv->eof) {
-  $csv->error_diag();
-}
-close $data;
-
-##########################
-# Open All Of Us Together
-%header;
-$head = -1;
-$i = 0;
-open(my $data, '<:encoding(utf8)', $dir.$file2) or die "Could not open '$dir$file2' $!\n";
-while (my $fields = $csv->getline( $data )) {
-
-	@f = @{$fields};
-	$n = @f;
-	if($fields->[0] eq "Name" && $head < 0){
-		$head = $i;
-		for($c = 0; $c < @f; $c++){
-			if($f[$c]){
-				$header{$f[$c]} = $c;
-			}
-		}
-	}
-	if($head >= 0 && $i > $head){
-		$postcodes{$f[$header{'Postcode'}]} = 1;
-	}
-	$i++;
-}
-if (not $csv->eof) {
-  $csv->error_diag();
-}
-close $data;
-
-
+getAnjali();
+#getAllTogether();
 
 %imd;
 $added = 0;
@@ -161,3 +105,71 @@ close(FILE);
 open(FILE,">",$dir."postcodes.json");
 print FILE $json;
 close(FILE);
+
+
+
+
+####################
+sub getAnjali {
+	my (%header,$head,$i,@f,$n,$c);
+	######################
+	# Open Anjali's sheet
+	%header;
+	$head = -1;
+	$i = 0;
+	open(my $data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
+	while (my $fields = $csv->getline( $data )) {
+
+		@f = @{$fields};
+		$n = @f;
+		if($fields->[0] eq "Name" && $head < 0){
+			$head = $i;
+			for($c = 0; $c < @f; $c++){
+				if($f[$c]){
+					$header{$f[$c]} = $c;
+				}
+			}
+		}
+		if($head >= 0 && $i > $head){
+			$postcodes{$f[$header{'Postcode'}]} = 1;
+		}
+		$i++;
+	}
+	if (not $csv->eof) {
+	  $csv->error_diag();
+	}
+	close $data;
+
+}
+
+sub getAllTogether {
+	my (%header,$i,@f,$n,$head,$c);
+	##########################
+	# Open All Of Us Together
+	%header;
+	$head = -1;
+	$i = 0;
+	open(my $data, '<:encoding(utf8)', $dir.$file2) or die "Could not open '$dir$file2' $!\n";
+	while (my $fields = $csv->getline( $data )) {
+
+		@f = @{$fields};
+		$n = @f;
+		if($fields->[0] eq "Name" && $head < 0){
+			$head = $i;
+			for($c = 0; $c < @f; $c++){
+				if($f[$c]){
+					$header{$f[$c]} = $c;
+				}
+			}
+		}
+		if($head >= 0 && $i > $head){
+			$postcodes{$f[$header{'Postcode'}]} = 1;
+		}
+		$i++;
+	}
+	if (not $csv->eof) {
+	  $csv->error_diag();
+	}
+	close $data;
+
+}
