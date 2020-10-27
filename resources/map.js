@@ -152,7 +152,7 @@
 			this.sources = {
 				'anjali': {
 					'name': 'Google Sheet',
-					'url': (location.href.indexOf('file')==0 ? 'data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
+					'url': (location.href.indexOf('file')==0 ? 'data/data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
 					'data': [],
 					'header': {},
 					'edit': 'Something not quite right? <a href="'+this.href+'">Help improve the data</a>'

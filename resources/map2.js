@@ -152,14 +152,14 @@
 			this.sources = {
 				'anjali': {
 					'name': 'Anjali / Marcus Rashford',
-					'url': (location.href.indexOf('file')==0 ? 'data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
+					'url': (location.href.indexOf('file')==0 ? 'data/data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
 					'data': [],
 					'header': {},
 					'edit': 'Something not quite right? <a href="'+this.href+'">Help improve the data</a>'
 				},
 				'alltogether': {
 					'name': 'All Of Us Together',
-					'url': 'all-of-us-together.csv',
+					'url': 'data/all-of-us-together.csv',
 					'data': [],
 					'header': {},
 					'edit': 'Data from: All Of Us Together'

@@ -4,7 +4,8 @@ use Text::CSV;
 use Data::Dumper;
 
 $url = "https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details";
-$file = "data.csv";
+$file = "data/data.csv";
+$file2 = "data/all-of-us-together.csv";
 $imdfile = "imd/imd.csv";
 
 # Get directory
@@ -48,6 +49,10 @@ if (not $csv->eof) {
 }
 close(FILE);
 
+
+
+######################
+# Open Anjali's sheet
 %postcodes;
 %header;
 $head = -1;
@@ -74,6 +79,36 @@ if (not $csv->eof) {
   $csv->error_diag();
 }
 close $data;
+
+##########################
+# Open All Of Us Together
+%header;
+$head = -1;
+$i = 0;
+open(my $data, '<:encoding(utf8)', $dir.$file2) or die "Could not open '$dir$file2' $!\n";
+while (my $fields = $csv->getline( $data )) {
+
+	@f = @{$fields};
+	$n = @f;
+	if($fields->[0] eq "Name" && $head < 0){
+		$head = $i;
+		for($c = 0; $c < @f; $c++){
+			if($f[$c]){
+				$header{$f[$c]} = $c;
+			}
+		}
+	}
+	if($head >= 0 && $i > $head){
+		$postcodes{$f[$header{'Postcode'}]} = 1;
+	}
+	$i++;
+}
+if (not $csv->eof) {
+  $csv->error_diag();
+}
+close $data;
+
+
 
 %imd;
 $added = 0;
