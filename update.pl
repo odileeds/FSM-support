@@ -66,6 +66,8 @@ foreach $pcdorig (sort(keys(%postcodes))){
 	
 	$pcd = uc($pcdorig);
 	$pcd = cleanPostcode($pcd);
+	# Zap Northern Ireland
+	if($pcd =~ /^BT/){ $pcd = ""; }
 	
 	if($pcd =~ /^([^\s]+) ([0-9A-Z])/){
 		$ocd = $1;
