@@ -51,7 +51,7 @@ while (my $fields = $csv->getline( $data )) {
 if (not $csv->eof) {
   $csv->error_diag();
 }
-close(FILE);
+close $data;
 
 %postcodes;
 
@@ -115,14 +115,14 @@ foreach $pcdorig (sort(keys(%postcodes))){
 }
 $json .= "\n}\n";
 
-open(FILE,">",$dir."imd/summary.csv");
-print FILE "Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs),Number of offers of support\n";
+open(CSV,">",$dir."imd/summary.csv");
+print CSV "Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs),Number of offers of support\n";
 foreach $key (sort(keys(%imd))){
 	$k = $key;
 	$k =~ s/^ //g;
-	print FILE "$k,$imd{$key}\n";
+	print CSV "$k,$imd{$key}\n";
 }
-close(FILE);
+close(CSV);
 
 open(FILE,">",$dir."postcodes.json");
 print FILE $json;
@@ -133,14 +133,14 @@ close(FILE);
 
 ####################
 sub getAnjali {
-	my (%header,$head,$i,@f,$n,$c,$pcd);
+	my (%header,$head,$i,@f,$n,$c,$pcd,$data,$fields);
 	######################
 	# Open Anjali's sheet
 	%header;
 	$head = -1;
 	$i = 0;
-	open(my $data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
-	while (my $fields = $csv->getline( $data )) {
+	open($data, '<:encoding(utf8)', $dir.$file) or die "Could not open '$dir$file' $!\n";
+	while($fields = $csv->getline( $data )){
 
 		@f = @{$fields};
 		$n = @f;
@@ -189,7 +189,7 @@ sub getAllTogether {
 		}
 		if($head >= 0 && $i > $head){
 			$pcd = quickClean(uc($f[$header{'Postcode'}]));
-			if($pcd){
+			if($pcd){# && $fields->[0] !~ /^Papa John/i && $fields->[0] !~ /^Wagamama/){
 				$postcodes{$pcd} = 1;
 			}
 		}
