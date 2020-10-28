@@ -146,7 +146,7 @@
 				'edit': 'Source: Anjali - Help improve the data'
 			},
 			'alltogether': {
-				'name': 'All Of Us Together',
+				'name': 'AllOfUsTogether',
 				'id': 'sheet-all-together',
 				'href': 'https://allofustogether.uk/',
 				'url': (location.href.indexOf('file')==0 ? 'data/all-of-us-together.csv' : 'https://docs.google.com/spreadsheets/d/1EesLuKPJG970wu7mcmqMgWCxGSKm1cwn2LlBMbNKHLk/gviz/tq?tqx=out:csv&sheet=details'),
