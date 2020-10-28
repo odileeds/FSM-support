@@ -8,13 +8,6 @@
 			else f();
 		};
 	}
-
-	// Function to clone a hash otherwise we end up using the same one
-	function clone(hash) {
-		var json = JSON.stringify(hash);
-		var object = JSON.parse(json);
-		return object;
-	}
 	
 	// Sort the data
 	function sortBy(arr,i){
@@ -163,14 +156,16 @@
 			this.get();
 			this.buildSearchForm('search');
 			return this;
-		}
+		};
 
 		// We have a pre-compiled list of postcodes with coordinates (to reduce load) 
 		ODI.ajax("postcodes.json",{
 			"dataType": "json",
 			"this": this,
 			"success": function(d){
-				for(var p in d) this.postcodes.lookup[p] = d[p];
+				for(var p in d){
+					if(d[p]) this.postcodes.lookup[p] = d[p];
+				}
 				this.init();
 			},
 			"error": function(d,attr){
@@ -189,40 +184,44 @@
 			el = document.getElementById('output');
 			el.innerHTML = '<p>List contains <span class="listtotal">?</span> places:</p>';
 			for(src in this.sources){
+				if(this.sources[src]){
 
-				this.sources[src].data = [];
-				this.sources[src].header = {};
-				
-				this.message('',{'id':this.sources[src].id+'-msg','type':'ERROR'});
+					this.sources[src].data = [];
+					this.sources[src].header = {};
+					
+					this.message('',{'id':this.sources[src].id+'-msg','type':'ERROR'});
 
-				// Add list holders
-				lid = this.sources[src].id+'-list';
-				if(!el.querySelector('#'+lid)){
-					ul = document.createElement('ul');
-					ul.setAttribute('id',lid);
-					el.appendChild(ul);
+					// Add list holders
+					lid = this.sources[src].id+'-list';
+					if(!el.querySelector('#'+lid)){
+						ul = document.createElement('ul');
+						ul.setAttribute('id',lid);
+						el.appendChild(ul);
+					}
+					// Increment number of sources to load
+					this.toload++;
 				}
-				// Increment number of sources to load
-				this.toload++;
 			}
 
-			for(var src in this.sources){
-				console.info('Getting '+this.sources[src].url);
-				ODI.ajax(this.sources[src].url,{
-					"dataType": "text",
-					"this":this,
-					"src": src,
-					"success":function(d,attr){
-						this.update(CSVToArray(d),attr.src);
-					},
-					"error":function(e){
-						console.error('Unable to load sheet',e);
-					}
-				});
+			for(src in this.sources){
+				if(this.sources[src]){
+					console.info('Getting '+this.sources[src].url);
+					ODI.ajax(this.sources[src].url,{
+						"dataType": "text",
+						"this":this,
+						"src": src,
+						"success":function(d,attr){
+							this.update(CSVToArray(d),attr.src);
+						},
+						"error":function(e){
+							console.error('Unable to load sheet',e);
+						}
+					});
+				}
 			}
 			setTimeout(function(){ _obj.get(); },300000);
 			return this;
-		}
+		};
 		
 		this.getPostcode = function(pcd,callback){
 			var ocd,parea,district,sector;
@@ -242,9 +241,8 @@
 						'callback': callback,
 						'pcd': pcd,
 						'success':function(data,attr){
-							var r,c;
 							data = CSVToArray(data);
-							for(r = 0; r < data.length; r++){
+							for(var r = 0; r < data.length; r++){
 								if(data[r][0]) this.postcodes.lookup[data[r][0]] = [parseFloat(data[r][2]),parseFloat(data[r][1])];
 							}
 							this.postcodes.loaded[attr.path] = true;
@@ -254,7 +252,7 @@
 							console.error('Unable to load '+attr.url+' for /'+attr.pcd+'/');
 							if(typeof attr.callback==="function") attr.callback.call(this,attr.pcd,this.postcodes.lookup[attr.pcd]);
 						}
-					})
+					});
 					
 				}else{
 					console.warn('No path '+path,ocd);
@@ -267,11 +265,11 @@
 			}
 			
 			return this;
-		}
+		};
 		
 		this.update = function(d,src){
 			
-			var hrow,r,c,i,list,pcd,el,lid,ul,loc,s,id;
+			var hrow,r,c,i,list,pcd,el,lid,ul,loc,s,o,li;
 			
 			this.sources[src].toload = 0;
 			this.sources[src].loaded = 0;
@@ -316,14 +314,14 @@
 			console.info('Header starts on line '+hrow);
 			for(i = hrow+1; i < d.length; i++){
 				o = {};
-				if(d[i][this.sources[src].header['Postcode']]) d[i][this.sources[src].header['Postcode']] = d[i][this.sources[src].header['Postcode']].toUpperCase();
+				if(d[i][this.sources[src].header.Postcode]) d[i][this.sources[src].header.Postcode] = d[i][this.sources[src].header.Postcode].toUpperCase();
 				for(c = 0; c < d[i].length; c++){
 					if(typeof this.sources[src].header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
 
-				o['_postcode'] = cleanPostcode(d[i][this.sources[src].header['Postcode']]);
+				o._postcode = cleanPostcode(d[i][this.sources[src].header.Postcode]);
 
-				if(o['_postcode'] && typeof this.postcodes.lookup[o['_postcode']]==="undefined") this.sources[src].toload++;
+				if(o._postcode && typeof this.postcodes.lookup[o._postcode]==="undefined") this.sources[src].toload++;
 				this.sources[src].data.push(o);
 			}
 
@@ -340,13 +338,13 @@
 				li.setAttribute('id',this.sources[src].data[i]._id);
 				list = "";
 				list += '<div class="padded b5-bg">';
-				list += '<h3>'+s.data[i]['Name']+'</h3>';
+				list += '<h3>'+s.data[i].Name+'</h3>';
 				list += '<p><strong>Location:</strong> ';
 				loc = '';
 				if(s.data[i]['Street Address 1 (building number + street)']) loc += (loc ? ', ':'')+s.data[i]['Street Address 1 (building number + street)'];
-				if(s.data[i]['Town']) loc += (loc ? ', ':'')+s.data[i]['Town'];
+				if(s.data[i].Town) loc += (loc ? ', ':'')+s.data[i].Town;
 				if(s.data[i]['City/Region']) loc += (loc ? ', ':'')+s.data[i]['City/Region'];
-				if(s.data[i]['Postcode']) loc += (loc ? ', ':'')+s.data[i]['Postcode'];
+				if(s.data[i].Postcode) loc += (loc ? ', ':'')+s.data[i].Postcode;
 				list += loc+'</p>';
 				if(s.data[i]['How to claim']) list += '<p><strong>How to claim:</strong> '+s.data[i]['How to claim']+'</p>';
 				if(s.data[i]['More details']) list += '<p><strong>More details:</strong> '+s.data[i]['More details']+'</p>';
@@ -360,12 +358,12 @@
 				list += '<a href="'+s.href+'" class="source '+(s['class']||'b2-bg')+'">'+s.edit.replace(/\%HREF\%/g,s.href)+'</a>';
 				li.innerHTML = list;
 				this.sources[src].data[i]._el = li;
-				ul.appendChild(li)
+				ul.appendChild(li);
 			}
 
 			if(this.sources[src].toload > this.sources[src].loaded){
 				for(i = 0; i < this.sources[src].data.length; i++){
-					pcd = this.sources[src].data[i]['_postcode']
+					pcd = this.sources[src].data[i]._postcode;
 					if(pcd){
 						if(typeof this.postcodes.lookup[pcd]==="undefined"){
 							console.log('Trying to find '+pcd);
@@ -380,14 +378,14 @@
 			if(this.sources[src].toload==this.sources[src].loaded) this.loadedSource(src);
 			
 			return this;
-		}
+		};
 		
 		this.loadedSource = function(src){
 			console.info('Loaded: '+this.sources[src].name);
 			this.loaded++;
 			if(this.toload == this.loaded) this.addToMap();
 			return this;
-		}
+		};
 
 		// Define a function for scoring how well a string matches
 		function getScore(str1,str2,v1,v2,v3){
@@ -395,7 +393,7 @@
 			var r = 0;
 			str1 = str1.toUpperCase();
 			str2 = str2.toUpperCase();
-			words = str1.split(/\W/);
+			var words = str1.split(/\W/);
 			if(str2.indexOf(str1)==0) r += (v1||3);
 			if(str2.indexOf(str1)>0) r += (v2||1);
 			if(str1==str2) r += (v3||4);
@@ -408,7 +406,7 @@
 		}
 
 		this.orderList = function(s,e,t){
-			var i,tmp,datum,str,li;
+			var i,tmp,datum,str,src;
 
 			str = s.toUpperCase();
 
@@ -417,13 +415,15 @@
 			var n = 0;
 
 			for(src in this.sources){
-				for(i = 0; i < this.sources[src].data.length; i++){
-					datum = {'rank':0,'el':this.sources[src].data[i]._el};
-					datum.rank += getScore(str,this.sources[src].data[i]['Name'],4,1,2);
-					datum.rank += getScore(str,this.sources[src].data[i]['Town'],2,1,2);
-					datum.rank += getScore(str,this.sources[src].data[i]['City/Region'],2,1,2);
-					datum.rank += getScore(str,this.sources[src].data[i]['Postcode'],2,1,2);
-					tmp.push(datum);
+				if(this.sources[src]){
+					for(i = 0; i < this.sources[src].data.length; i++){
+						datum = {'rank':0,'el':this.sources[src].data[i]._el};
+						datum.rank += getScore(str,this.sources[src].data[i].Name,4,1,2);
+						datum.rank += getScore(str,this.sources[src].data[i].Town,2,1,2);
+						datum.rank += getScore(str,this.sources[src].data[i]['City/Region'],2,1,2);
+						datum.rank += getScore(str,this.sources[src].data[i].Postcode,2,1,2);
+						tmp.push(datum);
+					}
 				}
 			}
 			if(str){
@@ -447,7 +447,7 @@
 			
 			this.updatePlaces(n,null);
 			return this;
-		}
+		};
 
 		this.buildSearchForm = function(id){
 			var frm;
@@ -476,20 +476,10 @@
 				});
 			}
 			return this;
-		}
+		};
 		
 		this.addToMap = function(){
-			var geojson = {"type": "FeatureCollection","features":[]};
 			var markerList = [];
-
-			var geoattrs = {
-				'style': { "color": "#2254F4", "weight": 2, "opacity": 0.65 },
-				'pointToLayer': function(geoJsonPoint, latlng) { return L.marker(latlng,{icon: makeMarker('#D60303')}); },
-				'onEachFeature': function(feature, layer) {
-					popup = buildDefaultPopup(feature,"");
-					if(popup) layer.bindPopup(popup);
-				}
-			};
 
 			this.nodes = L.markerClusterGroup({
 				chunkedLoading: true,
@@ -506,20 +496,22 @@
 
 			var total = 0;
 			var ltotal = 0;
-			var src,i,id;
+			var src,i,pcd,feature,tempmark;
 			for(src in this.sources){
-				ltotal += this.sources[src].data.length;
-				for(i = 0; i < this.sources[src].data.length; i++){
-					pcd = this.sources[src].data[i]['_postcode'];
-					if(pcd){
-						if(typeof this.postcodes.lookup[pcd]==="object"){
-							feature = {'type':'Feature','properties':this.sources[src].data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
-							feature.properties._src = this.sources[src];
-							tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,""));
-							markerList.push(tempmark);
-							total++;
-						}else{
-							this.message('Failed to find <em>'+pcd+'</em> for '+this.sources[src].data[i]['Name']+', '+this.sources[src].data[i]['Town']+' ('+this.sources[src].name+')',{'id':this.sources[src].id+'-msg','append':true,'type':'ERROR'});
+				if(this.sources[src]){
+					ltotal += this.sources[src].data.length;
+					for(i = 0; i < this.sources[src].data.length; i++){
+						pcd = this.sources[src].data[i]._postcode;
+						if(pcd){
+							if(typeof this.postcodes.lookup[pcd]==="object"){
+								feature = {'type':'Feature','properties':this.sources[src].data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
+								feature.properties._src = this.sources[src];
+								tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,""));
+								markerList.push(tempmark);
+								total++;
+							}else{
+								this.message('Failed to find <em>'+pcd+'</em> for '+this.sources[src].data[i].Name+', '+this.sources[src].data[i].Town+' ('+this.sources[src].name+')',{'id':this.sources[src].id+'-msg','append':true,'type':'ERROR'});
+							}
 						}
 					}
 				}
@@ -531,7 +523,7 @@
 			this.updatePlaces(ltotal,total);
 			
 			return this;
-		}
+		};
 		
 		this.updatePlaces = function(ltotal,total){
 			var li,i;
@@ -544,7 +536,7 @@
 				for(i = 0 ; i < li.length; i++) li[i].innerHTML = total;
 			}
 			return this;
-		}
+		};
 		
 		this.makeMap = function(){
 			this.baseMaps = {};
@@ -563,23 +555,14 @@
 			// Update attribution
 			var prefix = "";
 			for(var src in this.sources){
-				prefix += (prefix ? ' / ' : '')+'<a href="'+this.sources[src].href+'">'+this.sources[src].name+'</a>';
+				if(this.sources[src]){
+					prefix += (prefix ? ' / ' : '')+'<a href="'+this.sources[src].href+'">'+this.sources[src].name+'</a>';
+				}
 			}
 			this.map.attributionControl.setPrefix('Data: '+prefix).setPosition('bottomleft');
 
-			var icon = L.Icon.extend({
-				options: {
-					shadowUrl: '/resources/images/marker-shadow.png',
-					iconSize:     [25, 41], // size of the icon
-					shadowSize:   [41, 41], // size of the shadow
-					iconAnchor:   [12.5, 41], // point of the icon which will correspond to marker's location
-					shadowAnchor: [12.5, 41],  // the same for the shadow
-					popupAnchor:  [0, -41] // point from which the popup should open relative to the iconAnchor
-				}
-			});
-
 			return this;
-		}
+		};
 
 		this.log = function(){
 			if(this.logging || arguments[0]=="ERROR"){
@@ -596,11 +579,11 @@
 		this.message = function(msg,attr){
 			if(!attr) attr = {};
 			if(!attr.id) attr.id = 'default';
-			if(!attr['type']) attr['type'] = 'message';
-			if(msg) this.log(attr['type'],msg.replace(/<[^\>]*>/g,""));
+			if(!attr.type) attr.type = 'message';
+			if(msg) this.log(attr.type,msg.replace(/<[^\>]*>/g,""));
 			var css = "b5-bg";
-			if(attr['type']=="ERROR") css = "c12-bg";
-			if(attr['type']=="WARNING") css = "c14-bg";
+			if(attr.type=="ERROR") css = "c12-bg";
+			if(attr.type=="WARNING") css = "c14-bg";
 
 			var msgel = document.querySelector('.message');
 			var el;
@@ -642,6 +625,7 @@
 			});
 		}
 		function buildDefaultPopup(feature,popup){
+			var p,title,added;
 			// does this feature have a property named popupContent?
 			if(feature.properties){			
 				if(feature.properties && feature.properties.popup){
@@ -653,7 +637,7 @@
 				popup += '<div class="info">';
 				if(feature.properties) title = (feature.properties.title || feature.properties.name || feature.properties.Name || '');
 				if(title) popup += '<h3>'+(title)+'</h3>';
-				var added = 0;
+				added = 0;
 				if(feature.properties){
 					for(var f in feature.properties){
 						if(f != "Name" && f!="name" && f!="title" && f!="other_tags" && f.indexOf("_")!=0 && (typeof feature.properties[f]==="number" || (typeof feature.properties[f]==="string" && feature.properties[f].length > 0))){
@@ -672,8 +656,10 @@
 					// Loop over properties and replace anything
 					if(feature.properties){
 						for(p in feature.properties){
-							while(popup.indexOf("{{"+p+"}}") >= 0){
-								popup = popup.replace("{{"+p+"}}",feature.properties[p] || "?");
+							if(feature.properties[p]){
+								while(popup.indexOf("{{"+p+"}}") >= 0){
+									popup = popup.replace("{{"+p+"}}",feature.properties[p] || "?");
+								}
 							}
 						}
 					}
@@ -698,8 +684,10 @@
 					popup = popup.replace(/\%IF ([^\s]+) (.*) ENDIF\%/g,function(str,p1,p2){ return (feature.properties[p1] && feature.properties[p1] != "N/a" ? p2 : ''); });
 					// Loop over properties and replace anything
 					for(p in feature.properties){
-						while(popup.indexOf("%"+p+"%") >= 0){
-							popup = popup.replace("%"+p+"%",feature.properties[p] || "?");
+						if(feature.properties[p]){
+							while(popup.indexOf("%"+p+"%") >= 0){
+								popup = popup.replace("%"+p+"%",feature.properties[p] || "?");
+							}
 						}
 					}
 					popup = popup.replace(/%Latitude%/g,(feature.properties.centroid ? feature.properties.centroid.latitude : (feature.geometry.coordinates ? feature.geometry.coordinates[1] : '')));
@@ -717,7 +705,7 @@
 		}
 
 		return this;
-	}
+	};
 
 	/**
 	 * CSVToArray parses any String of Data including '\r' '\n' characters,
@@ -776,4 +764,4 @@
 
 })(window || this);
 
-var map;
+var fsm;
