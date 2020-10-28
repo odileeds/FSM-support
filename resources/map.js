@@ -136,7 +136,7 @@
 
 		this.sources = {
 			'anjali': {
-				'name': 'Anjali/Marcus Rashford',
+				'name': 'Anjali / Marcus Rashford',
 				'id': 'sheet-anjali',
 				'href': 'https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/edit',
 				'url': (location.href.indexOf('file')==0 ? 'data/data.csv' : 'https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details'),
