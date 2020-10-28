@@ -63,56 +63,57 @@ $added = 0;
 $json = "{\n";
 $pcd = "";
 foreach $pcdorig (sort(keys(%postcodes))){
-	
-	$pcd = uc($pcdorig);
-	$pcd = cleanPostcode($pcd);
-	# Zap Northern Ireland
-	#if($pcd =~ /^BT/){ $pcd = ""; }
-	
-	if($pcd =~ /^([^\s]+) ([0-9A-Z])/){
-		$ocd = $1;
-		$icd = $2;
-		$ocd =~ /^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/;
-		$area = $1;
-		$district = $2;
-		$path = $area."/".$district."/".$icd;
+	if($pcdorig){
+		$pcd = uc($pcdorig);
+		$pcd = cleanPostcode($pcd);
+		# Zap Northern Ireland
+		if($pcd =~ /^BT/){ $pcd = ""; }
 		
-		$pfile = $dir."postcodes/$path.csv";
-		if(-e $pfile){
-			open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
-			$found = 0;
-			while (my $fields = $csv->getline( $data )) {
-				if($fields->[0] eq $pcd){
-					$decile = sprintf("%2d",$lsoa{$fields->[3]});
-					if($lsoa{$fields->[3]} < 1){
-						if(!$imd{'?'}){ $imd{'?'} = 0; }
-						$imd{'?'}++;
-					}else{
-						if(!$imd{$decile}){ $imd{$decile} = 0; }
-						$imd{$decile}++;
+		if($pcd =~ /^([^\s]+) ([0-9A-Z])/){
+			$ocd = $1;
+			$icd = $2;
+			$ocd =~ /^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/;
+			$area = $1;
+			$district = $2;
+			$path = $area."/".$district."/".$icd;
+			
+			$pfile = $dir."postcodes/$path.csv";
+			if(-e $pfile){
+				open(my $data, '<:encoding(utf8)', $pfile) or die "Could not open '$pfile' $!\n";
+				$found = 0;
+				while (my $fields = $csv->getline( $data )) {
+					if($fields->[0] eq $pcd){
+						$decile = sprintf("%2d",$lsoa{$fields->[3]});
+						if($lsoa{$fields->[3]} < 1){
+							if(!$imd{'?'}){ $imd{'?'} = 0; }
+							$imd{'?'}++;
+						}else{
+							if(!$imd{$decile}){ $imd{$decile} = 0; }
+							$imd{$decile}++;
+						}
+						$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
+						$added++;
+						$found++;
 					}
-					$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":[$fields->[2],$fields->[1]]";
-					$added++;
-					$found++;
 				}
-			}
-			if($found == 0){
+				if($found == 0){
+					$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":\"\"";
+					print "Didn't find $pcd ($pcdorig)\n";
+					$added++;
+				}
+				close $data;
+			}else{
+				if(!$imd{'?'}){ $imd{'?'} = 0; }
+				$imd{'?'}++;
 				$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":\"\"";
-				print "Didn't find $pcd ($pcdorig)\n";
+				print "No path for $pcd ($pcdorig)\n";
 				$added++;
-			}
-			close $data;
-		}else{
-			if(!$imd{'?'}){ $imd{'?'} = 0; }
-			$imd{'?'}++;
-			$json .= ($added > 0 ? ",\n" : "")."\t\"$pcd\":\"\"";
-			print "No path for $pcd ($pcdorig)\n";
-			$added++;
 
+			}
 		}
 	}
 }
-$json .= "}\n";
+$json .= "\n}\n";
 
 open(FILE,">",$dir."imd/summary.csv");
 print FILE "Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs),Number of offers of support\n";
@@ -132,7 +133,7 @@ close(FILE);
 
 ####################
 sub getAnjali {
-	my (%header,$head,$i,@f,$n,$c);
+	my (%header,$head,$i,@f,$n,$c,$pcd);
 	######################
 	# Open Anjali's sheet
 	%header;
@@ -152,7 +153,10 @@ sub getAnjali {
 			}
 		}
 		if($head >= 0 && $i > $head){
-			$postcodes{$f[$header{'Postcode'}]} = 1;
+			$pcd = quickClean(uc($f[$header{'Postcode'}]));
+			if($pcd){
+				$postcodes{$pcd} = 1;
+			}
 		}
 		$i++;
 	}
@@ -164,7 +168,7 @@ sub getAnjali {
 }
 
 sub getAllTogether {
-	my (%header,$i,@f,$n,$head,$c);
+	my (%header,$i,@f,$n,$head,$c,$pcd);
 	##########################
 	# Open All Of Us Together
 	%header;
@@ -184,7 +188,10 @@ sub getAllTogether {
 			}
 		}
 		if($head >= 0 && $i > $head){
-			$postcodes{$f[$header{'Postcode'}]} = 1;
+			$pcd = quickClean(uc($f[$header{'Postcode'}]));
+			if($pcd){
+				$postcodes{$pcd} = 1;
+			}
 		}
 		$i++;
 	}
@@ -195,6 +202,17 @@ sub getAllTogether {
 
 }
 
+sub quickClean {
+	my $pcd = $_[0];
+	if($pcd){
+		# Remove trailing/leading spaces
+		$pcd =~ s/(^ | $)//g;
+		
+		# Remove non alpha-numeric-space characters
+		$pcd =~ s/[^0-9A-Z\s]//g;
+	}
+	return $pcd;
+}
 sub cleanPostcode {
 	my $pcd = $_[0];
 	if($pcd){
