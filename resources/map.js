@@ -9,6 +9,20 @@
 		};
 	}
 
+	// Function to clone a hash otherwise we end up using the same one
+	function clone(hash) {
+		var json = JSON.stringify(hash);
+		var object = JSON.parse(json);
+		return object;
+	}
+	
+	// Sort the data
+	function sortBy(arr,i){
+		return arr.sort(function (a, b) {
+			return a[i] < b[i] ? 1 : -1;
+		});
+	}
+
 	root.ODI.ajax = function(url,attrs){
 		//=========================================================
 		// ajax(url,{'complete':function,'error':function,'dataType':'json'})
@@ -147,6 +161,7 @@
 		this.init = function(){
 			this.makeMap();
 			this.get();
+			this.buildSearchForm('search');
 			return this;
 		}
 
@@ -172,7 +187,7 @@
 			this.loaded = 0;
 			
 			el = document.getElementById('output');
-			el.innerHTML = '<p>List contains <span id="listtotal"></span> <span id="maptotal"></span>:</p>';
+			el.innerHTML = '<p>List contains <span class="listtotal">?</span> places:</p>';
 			for(src in this.sources){
 
 				this.sources[src].data = [];
@@ -256,7 +271,7 @@
 		
 		this.update = function(d,src){
 			
-			var hrow,r,c,i,list,pcd,el,lid,ul,loc,s;
+			var hrow,r,c,i,list,pcd,el,lid,ul,loc,s,id;
 			
 			this.sources[src].toload = 0;
 			this.sources[src].loaded = 0;
@@ -311,10 +326,19 @@
 				if(o['_postcode'] && typeof this.postcodes.lookup[o['_postcode']]==="undefined") this.sources[src].toload++;
 				this.sources[src].data.push(o);
 			}
-			list = '';
+
+			el = document.getElementById('output');
+			lid = this.sources[src].id+'-list';
+			ul = el.querySelector('#'+lid);
+
+
 			s = this.sources[src];
 			for(i = 0; i < s.data.length; i++){
-				list += '<li>';
+				this.sources[src].data[i]._id = 'list-'+src+'-'+i;
+
+				li = document.createElement('li');
+				li.setAttribute('id',this.sources[src].data[i]._id);
+				list = "";
 				list += '<div class="padded b5-bg">';
 				list += '<h3>'+s.data[i]['Name']+'</h3>';
 				list += '<p><strong>Location:</strong> ';
@@ -334,12 +358,10 @@
 				}
 				list += '</div>';
 				list += '<a href="'+s.href+'" class="source '+(s['class']||'b2-bg')+'">'+s.edit.replace(/\%HREF\%/g,s.href)+'</a>';
-				list += '</li>'
+				li.innerHTML = list;
+				this.sources[src].data[i]._el = li;
+				ul.appendChild(li)
 			}
-			el = document.getElementById('output');
-			lid = this.sources[src].id+'-list';
-			ul = el.querySelector('#'+lid);
-			ul.innerHTML = list;
 
 			if(this.sources[src].toload > this.sources[src].loaded){
 				for(i = 0; i < this.sources[src].data.length; i++){
@@ -364,6 +386,95 @@
 			console.info('Loaded: '+this.sources[src].name);
 			this.loaded++;
 			if(this.toload == this.loaded) this.addToMap();
+			return this;
+		}
+
+		// Define a function for scoring how well a string matches
+		function getScore(str1,str2,v1,v2,v3){
+			if(!str2 || !str1) return 0;
+			var r = 0;
+			str1 = str1.toUpperCase();
+			str2 = str2.toUpperCase();
+			words = str1.split(/\W/);
+			if(str2.indexOf(str1)==0) r += (v1||3);
+			if(str2.indexOf(str1)>0) r += (v2||1);
+			if(str2==str1) r += (v3||4);
+			for(var w = 0; w < words.length; w++){
+				if(str2.indexOf(words[w])==0) r += (v1||3);
+				if(str2.indexOf(words[w])>0) r += (v2||1);
+				if(str2==words[w]) r += (v3||4);
+			}
+			return r;
+		}
+
+		this.orderList = function(s,e,t){
+			var i,tmp,datum,str,li;
+
+			str = s.toUpperCase();
+
+			// Rank the results
+			tmp = [];
+			var n = 0;
+
+			for(src in this.sources){
+				for(i = 0; i < this.sources[src].data.length; i++){
+					datum = {'rank':0,'el':this.sources[src].data[i]._el};
+					datum.rank += getScore(str,this.sources[src].data[i]['Name']);
+					datum.rank += getScore(str,this.sources[src].data[i]['Town'],2,1,2);
+					datum.rank += getScore(str,this.sources[src].data[i]['City/Region'],2,1,2);
+					datum.rank += getScore(str,this.sources[src].data[i]['Postcode'],2,1,2);
+					tmp.push(datum);
+				}
+			}
+			if(str){
+				tmp = sortBy(tmp,'rank');
+				for(i = 0; i < tmp.length; i++){
+					if(tmp[i].rank > 0){
+						// Make sure it is visible
+						tmp[i].el.classList.remove('hide');
+						// Re-order the DOM
+						if(i==0) tmp[i].el.parentNode.childNodes[0].insertAdjacentElement('beforebegin', tmp[i].el);
+						else tmp[i-1].el.insertAdjacentElement('afterend', tmp[i].el);
+						n++;
+					}else{
+						// Hide it
+						tmp[i].el.classList.add('hide');
+					}
+				}
+			}else{
+				n = tmp.length;
+			}
+			
+			this.updatePlaces(n,null);
+			return this;
+		}
+
+		this.buildSearchForm = function(id){
+			var frm;
+			var _obj = this;
+
+			this.search = document.getElementById(id);
+
+			if(this.search.form){
+				frm = this.search.form;
+				frm.addEventListener('submit',function(e){
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				},false);
+			}
+			if(this.search){
+				this.search.setAttribute('autocomplete','off');
+				this.search.addEventListener('keyup',function(e){
+					e.preventDefault();
+					e.stopPropagation();
+					if(e.keyCode==40 || e.keyCode==38){
+						//highlight(e.keyCode);
+					}else{
+						_obj.orderList(this.value,e,event);
+					}
+				});
+			}
 			return this;
 		}
 		
@@ -395,7 +506,7 @@
 
 			var total = 0;
 			var ltotal = 0;
-			var src,i;
+			var src,i,id;
 			for(src in this.sources){
 				ltotal += this.sources[src].data.length;
 				for(i = 0; i < this.sources[src].data.length; i++){
@@ -417,9 +528,21 @@
 			this.nodes.addLayers(markerList);
 			this.map.addLayer(this.nodes);
 			
-			document.getElementById('listtotal').innerHTML = ltotal+' places';
-			document.getElementById('maptotal').innerHTML = " ("+total+" with postcodes included on the map)";
+			this.updatePlaces(ltotal,total);
 			
+			return this;
+		}
+		
+		this.updatePlaces = function(ltotal,total){
+			var li,i;
+			if(typeof ltotal==="number"){
+				li = document.getElementsByClassName('listtotal');
+				for(i = 0 ; i < li.length; i++) li[i].innerHTML = ltotal;
+			}
+			if(typeof total==="number"){
+				li = document.getElementsByClassName('maptotal');
+				for(i = 0 ; i < li.length; i++) li[i].innerHTML = total;
+			}
 			return this;
 		}
 		

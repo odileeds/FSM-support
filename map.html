@@ -33,8 +33,13 @@
 		<div class="padded">
 			<div class="holder">
 				<div id="location" class="map-full" style="height: 500px;width:100%;margin-bottom:1em;max-height:100vh;">Location</div>
-				<p>The data refreshes from <a href="#about">two Google Sheets</a> every 5 minutes. You can <a href="https://docs.google.com/forms/d/e/1FAIpQLSfyHb0igxOxitGNqCzvWW6SnESpKlA5ACoSIoNFnK6kUlYqGw/viewform">add your business to the list</a>. There are several projects doing the same thing so check out <a href="#alternatives">alternative maps/data sources</a> too.</p>
-				<div id="output"></div>
+				<p>The data refreshes from <a href="#about">two Google Sheets</a> every 5 minutes. You can <a href="https://docs.google.com/forms/d/e/1FAIpQLSfyHb0igxOxitGNqCzvWW6SnESpKlA5ACoSIoNFnK6kUlYqGw/viewform">add your business to the list</a>. There are several projects doing the same thing so check out <a href="#alternatives">alternative maps/data sources</a> too. The map contains <span class="maptotal">?</span> places.</p>
+				<form class="placesearch">
+					<input type="text" id="search" name="search" placeholder="Search list of offers by name, postcode, town/city" />
+				</form>
+				<div id="output">
+				
+				</div>
 			</div>
 		</div>
 	</div>

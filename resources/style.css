@@ -170,6 +170,11 @@ footer a { color: inherit; }
 	transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in;
 }
 
+/* Typeahead search */
+form.placesearch { min-width: 30px; min-height: 30px; }
+form.placesearch { position: relative; }
+form.placesearch input[type="text"]{ display: inline-block; min-width: 25em; max-width:100%; margin-bottom:1em; height: 2.5em; line-height:2.5em; font-size:1em; padding: 0.25em 0.5em; border: 1px solid #666; }
+#output ul li.hide { display: none; }
 
 	
 @media only screen and (max-width: 600px) {
