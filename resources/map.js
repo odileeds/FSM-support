@@ -164,7 +164,7 @@
 			"this": this,
 			"success": function(d){
 				for(var p in d){
-					if(d[p]) this.postcodes.lookup[p] = d[p];
+					this.postcodes.lookup[p] = d[p];
 				}
 				this.init();
 			},
@@ -255,7 +255,7 @@
 					});
 					
 				}else{
-					console.warn('No path '+path,ocd);
+					console.warn('No path '+path,ocd,parea,district,this.postcodes.loaded[path]);
 					if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 				}
 				
