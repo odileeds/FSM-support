@@ -538,7 +538,7 @@
 				}
 				popup += '</div>';
 			}
-			if(feature.properties._src.edit) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">'+feature.properties._src.edit.replace(/\%HREF\%/,feature.properties._src.href)+'</p>';
+			if(feature.properties._src.edit) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;"><a href="'+feature.properties._src.href+'">'+feature.properties._src.edit+'</a></p>';
 			if(popup){
 				if(popup.indexOf("{{") >= 0){
 					//popup = popup.replace(new RegExp(/\%IF ([^\s]+) (.*) ENDIF\%/,"g"),function(str,p1,p2){ return (feature.properties[p1] && feature.properties[p1] != "N/a" ? p2 : ''); });
