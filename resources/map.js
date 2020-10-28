@@ -174,6 +174,12 @@
 			el = document.getElementById('output');
 			el.innerHTML = '<p>List contains <span id="listtotal"></span> <span id="maptotal"></span>:</p>';
 			for(src in this.sources){
+
+				this.sources[src].data = [];
+				this.sources[src].header = {};
+				
+				this.message('',{'id':this.sources[src].id+'-msg','type':'ERROR'});
+
 				// Add list holders
 				lid = this.sources[src].id+'-list';
 				if(!el.querySelector('#'+lid)){
@@ -474,14 +480,14 @@
 			if(attr['type']=="WARNING") css = "c14-bg";
 
 			var msgel = document.querySelector('.message');
+			var el;
 			if(!msgel) return this;
 		
 			if(!msg){
-				if(msgel.length > 0){
+				if(msgel){
+					el = msgel.querySelector('#'+attr.id);
 					// Remove the specific message container
-					if(msgel.getElementById(attr.id)){
-						msgel.getElementById(attr.id).parentNode().removeChild(msgel.getElementById(attr.id));
-					}
+					if(el) el.parentNode.removeChild(el);
 				}
 			}else if(msg){
 				// Pad the container
