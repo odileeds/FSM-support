@@ -292,7 +292,6 @@
 				}
 				if(d[hrow][c]) this.sources[src].header[d[hrow][c]] = c;
 			}
-			pcd;
 			console.info('Header starts on line '+hrow);
 			for(i = hrow+1; i < d.length; i++){
 				o = {};
@@ -303,7 +302,7 @@
 
 				o['_postcode'] = cleanPostcode(d[i][this.sources[src].header['Postcode']]);
 
-				if(o['_postcode'] && !this.postcodes.lookup[o['_postcode']]) this.sources[src].toload++;
+				if(o['_postcode'] && typeof this.postcodes.lookup[o['_postcode']]==="undefined") this.sources[src].toload++;
 				this.sources[src].data.push(o);
 			}
 			list = '';
@@ -338,10 +337,11 @@
 
 			if(this.sources[src].toload > this.sources[src].loaded){
 				for(i = 0; i < this.sources[src].data.length; i++){
-					if(this.sources[src].data[i]['_postcode']){
-						if(!this.postcodes.lookup[this.sources[src].data[i]['_postcode']]){
-							console.log('Getting '+this.sources[src].data[i]['_postcode']);
-							this.getPostcode(this.sources[src].data[i]['_postcode'],function(pcd,pos){
+					pcd = this.sources[src].data[i]['_postcode']
+					if(pcd){
+						if(typeof this.postcodes.lookup[pcd]==="undefined"){
+							console.log('Trying to find '+pcd);
+							this.getPostcode(pcd,function(pcd,pos){
 								this.sources[src].loaded++;
 								if(this.sources[src].toload==this.sources[src].loaded) this.loadedSource(src);
 							});
@@ -349,7 +349,6 @@
 					}
 				}
 			}
-
 			if(this.sources[src].toload==this.sources[src].loaded) this.loadedSource(src);
 			
 			return this;
@@ -358,9 +357,7 @@
 		this.loadedSource = function(src){
 			console.info('Loaded: '+this.sources[src].name);
 			this.loaded++;
-			if(this.toload == this.loaded){
-				this.addToMap();
-			}
+			if(this.toload == this.loaded) this.addToMap();
 			return this;
 		}
 		
@@ -398,7 +395,7 @@
 				for(i = 0; i < this.sources[src].data.length; i++){
 					pcd = this.sources[src].data[i]['_postcode'];
 					if(pcd){
-						if(this.postcodes.lookup[pcd]){
+						if(typeof this.postcodes.lookup[pcd]==="object"){
 							feature = {'type':'Feature','properties':this.sources[src].data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
 							feature.properties._src = this.sources[src];
 							tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,""));
