@@ -87,6 +87,10 @@ a.b1-bg:hover, a.b2-bg:hover, a.b3-bg:hover, a.b4-bg:hover, a.b5-bg:hover, a.b6-
 .b6-bg .button { background-color: black; color: white!important; }
 button:hover, a.button:hover, button:focus, a.button:focus { background-color: #333333!important; color: #efefef!important; }
 
+.source { padding: 0.5em 1em; color: inherit; display: block; font-size: 0.8em; }
+#output ul li p { margin-bottom: 0.25em; }
+
+footer a { color: inherit; }
 
 /* Markercluster */
 .marker-group { border-radius: 100%; line-height: 2em; width: 2em; text-align:center; }

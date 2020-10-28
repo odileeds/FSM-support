@@ -5,6 +5,7 @@ use Data::Dumper;
 
 $url = "https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details";
 $file = "data/data.csv";
+$url2 = "https://docs.google.com/spreadsheets/d/1EesLuKPJG970wu7mcmqMgWCxGSKm1cwn2LlBMbNKHLk/gviz/tq?tqx=out:csv&sheet=details";
 $file2 = "data/all-of-us-together.csv";
 $imdfile = "imd/imd.csv";
 
@@ -16,6 +17,9 @@ else{ $dir = "./"; }
 
 if(time() - (stat $dir.$file)[9] >= 600){ 
 	`wget -q --no-check-certificate -O "$dir$file" "$url"`;
+}
+if(time() - (stat $dir.$file2)[9] >= 600){ 
+	`wget -q --no-check-certificate -O "$dir$file2" "$url2"`;
 }
 
 my $csv = Text::CSV->new ({
@@ -52,7 +56,7 @@ close(FILE);
 %postcodes;
 
 getAnjali();
-#getAllTogether();
+getAllTogether();
 
 %imd;
 $added = 0;
@@ -154,7 +158,7 @@ sub getAllTogether {
 
 		@f = @{$fields};
 		$n = @f;
-		if($fields->[0] eq "Name" && $head < 0){
+		if($fields->[0] eq "Org Name" && $head < 0){
 			$head = $i;
 			for($c = 0; $c < @f; $c++){
 				if($f[$c]){
