@@ -136,7 +136,7 @@
 
 		this.sources = {
 			'anjali': {
-				'name': 'Anjali / Marcus Rashford',
+				'name': 'Anjali/Marcus Rashford',
 				'id': 'sheet-anjali',
 				'href': 'https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/edit',
 				'url': (location.href.indexOf('file')==0 ? 'data/data.csv' : 'https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details'),
@@ -146,7 +146,7 @@
 				'edit': 'Source: Anjali - Help improve the data'
 			},
 			'alltogether': {
-				'name': 'AllOfUsTogether',
+				'name': 'TechForUK',
 				'id': 'sheet-all-together',
 				'href': 'https://allofustogether.uk/',
 				'url': (location.href.indexOf('file')==0 ? 'data/all-of-us-together.csv' : 'https://docs.google.com/spreadsheets/d/1EesLuKPJG970wu7mcmqMgWCxGSKm1cwn2LlBMbNKHLk/gviz/tq?tqx=out:csv&sheet=details'),
@@ -154,7 +154,7 @@
 				'header': {},
 				'columnmap': {'Org Name':'Name','Town/City':'Town','County':'City/Region','Other info or description about the free meals':'More details','How to claim the meal':'How to claim','The URL of their announcement':'Link to post','Street Address 1 (building number + street)':'Address 1','Street Address 2':'Address 2','What time does the organisation open?':'Opens','What time does the organisation close?':'Closing','Which days are the meals available?':'Days','What is the organisation\'s phone number? Please include the area code.':'Phone number','The website of the organisation giving the free meals':'Website'},
 				'class': 'c7-bg',
-				'edit': 'Source: All Of Us Together'
+				'edit': 'Source: TechForUK'
 			}
 		};
 
