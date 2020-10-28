@@ -138,7 +138,7 @@
 				'url': (location.href.indexOf('file')==0 ? 'data/all-of-us-together.csv' : 'https://docs.google.com/spreadsheets/d/1EesLuKPJG970wu7mcmqMgWCxGSKm1cwn2LlBMbNKHLk/gviz/tq?tqx=out:csv&sheet=details'),
 				'data': [],
 				'header': {},
-				'columnmap': {'Org Name':'Name','Town/City':'Town','County':'City/Region','Other info or description about the free meals':'More details','How to claim the meal':'How to claim','The URL of their announcement':'Link to post'},
+				'columnmap': {'Org Name':'Name','Town/City':'Town','County':'City/Region','Other info or description about the free meals':'More details','How to claim the meal':'How to claim','The URL of their announcement':'Link to post','Street Address 1 (building number + street)':'Address 1','Street Address 2':'Address 2','What time does the organisation open?':'Opens','What time does the organisation close?':'Closing','Which days are the meals available?':'Days'},
 				'class': 'c7-bg',
 				'edit': 'Source: All Of Us Together'
 			}
@@ -535,7 +535,7 @@
 				}
 				popup += '</div>';
 			}
-			if(feature.properties._src.edit) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;"><a href="'+feature.properties._src.href+'">'+feature.properties._src.edit+'</a></p>';
+			if(feature.properties._src.edit) popup += '<p class="more"><a href="'+feature.properties._src.href+'">'+feature.properties._src.edit+'</a></p>';
 			if(popup){
 				if(popup.indexOf("{{") >= 0){
 					//popup = popup.replace(new RegExp(/\%IF ([^\s]+) (.*) ENDIF\%/,"g"),function(str,p1,p2){ return (feature.properties[p1] && feature.properties[p1] != "N/a" ? p2 : ''); });
