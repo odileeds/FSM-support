@@ -398,11 +398,11 @@
 			words = str1.split(/\W/);
 			if(str2.indexOf(str1)==0) r += (v1||3);
 			if(str2.indexOf(str1)>0) r += (v2||1);
-			if(str2==str1) r += (v3||4);
+			if(str1==str2) r += (v3||4);
 			for(var w = 0; w < words.length; w++){
-				if(str2.indexOf(words[w])==0) r += (v1||3);
-				if(str2.indexOf(words[w])>0) r += (v2||1);
-				if(str2==words[w]) r += (v3||4);
+				if(str2.indexOf(words[w])==0) r += (v1||3)/(w+1);
+				if(str2.indexOf(words[w])>0) r += (v2||1)/(w+1);
+				if(str2==words[w]) r += (v3||4)/(w+1);
 			}
 			return r;
 		}
@@ -419,7 +419,7 @@
 			for(src in this.sources){
 				for(i = 0; i < this.sources[src].data.length; i++){
 					datum = {'rank':0,'el':this.sources[src].data[i]._el};
-					datum.rank += getScore(str,this.sources[src].data[i]['Name']);
+					datum.rank += getScore(str,this.sources[src].data[i]['Name'],4,1,2);
 					datum.rank += getScore(str,this.sources[src].data[i]['Town'],2,1,2);
 					datum.rank += getScore(str,this.sources[src].data[i]['City/Region'],2,1,2);
 					datum.rank += getScore(str,this.sources[src].data[i]['Postcode'],2,1,2);
