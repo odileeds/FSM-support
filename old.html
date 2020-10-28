@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8" />
+	<link rel="StyleSheet" href="resources/style.css" type="text/css" />
+	<link href="https://odileeds.org/resources/images/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon">
+	<script type="text/javascript" src="resources/leaflet.js"></script>
+	<script type="text/javascript" src="resources/leaflet.markercluster.js"></script>
+	<script type="text/javascript" src="resources/old.js"></script>
+	<link rel="StyleSheet" href="resources/leaflet.css" type="text/css" />
+	<title>Half term support in UK</title>
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:site" content="@ODILeeds">
+	<meta name="twitter:url" property="og:url" content="https://odileeds.github.io/FSM-support/map">
+	<meta name="twitter:title" property="og:title" content="Half term support in UK">
+	<meta name="twitter:description" property="og:description" content="An interactive map showing half-term support in the UK during October/November 2020.">
+	<meta name="twitter:image" property="og:image" content="https://odileeds.github.io/FSM-support/screenshot.png">
+</head>
+<body>
+	<header class="b1-bg">
+		<div class="holder" style="text-align:center">
+			<a href="https://odileeds.org/"><img alt="ODI Leeds" src="https://odileeds.org/resources/images/odileeds-12.svg"></a>
+		</div>
+		<div class="c12-bg padded">
+			<div class="holder">
+				<h1>Half term support in UK</h1>
+			</div>
+		</div>
+	</header>
+
+	<div id="main" class="b6-bg" style="padding-bottom:3em;">
+		<div class="padded">
+			<div class="holder">
+				<div id="location" class="map-full" style="height: 500px;width:100%;margin-bottom:1em;max-height:100vh;">Location</div>
+				<p>The data refreshes from <a href="https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/edit#gid=0">the Google Sheet</a> every 5 minutes. You can <a href="https://docs.google.com/forms/d/e/1FAIpQLSfyHb0igxOxitGNqCzvWW6SnESpKlA5ACoSIoNFnK6kUlYqGw/viewform">add your business to the list</a>. There are several projects doing the same thing so check out <a href="#alternatives">alternative maps/data sources</a> too.</p>
+				<div id="output"></div>
+			</div>
+		</div>
+	</div>
+
+	<footer class="b1-bg padded">
+		<div class="holder">
+			<h2>About</h2>
+			<p>This map was initially created during Friday 23rd October 2020 to provide a way for people to find local offers of support being made to Marcus Rashford on Twitter and Facebook.</p>
+			<p>Twitter user <a href="https://twitter.com/anjali_x">Anjali</a> started curating a Google Sheet of those businesses offering support. We decided to make a map that builds on top of that Google Sheet and that is this page.</p>
+			<p>We load the data from the Google Sheet and look up the latitudes and longitudes for the postcodes. We use lookup data from the Office of National Statistics. Unfortunately, licensing of the data for Northern Ireland seems to suggest that we are not allowed to use these lookups for non-commercial/public use (they only allow "internal business use") so no Northern Ireland offers will appear on the map.</p>
+			<h2 id="alternatives">Alternatives</h2>
+			<p>There is <a href="https://www.google.com/maps/d/viewer?hl=en&hl=en&mid=1FY2YP3o-Yl6XfmquSB8ONAdEOfT-37su&ll=52.9147671101083%2C-2.288143472957945&z=7">a Google Map</a> created by the people at All Of Us Together who are crowd-sourcing the same sort of information. They are apparently taking in data from Anjali's Sheet (that powers this map) and several other sources. However they are not (as of Tuesday 27th October) sharing the collated data back openly. If they did we'd be able to show the data on this map too.</p> 
+			<p>There is also <a href="https://www.google.com/maps/d/viewer?mid=1ckbto_W7Ow30HSF6LVaPnHGf5trq5jPa&ll=53.35879883585061%2C-1.3252018500000018&z=7">this Google Map</a> from #AllKidsMatter that was mentioned in <a href="https://www.bbc.co.uk/news/amp/technology-54665707?__twitter_impression=true">a BBC News article</a> on Friday afternoon. It is not clear if the Sheet behind this map is available or if the data are being included in All Of Us Together's map.</a>
+			<h2>Credits</h2>
+			<p>Visualisation by Stuart Lowe, ODI Leeds 2020. <a href="https://github.com/odileeds/FSM-support/">Code on Github</a>.</p>
+			<p>Half-term support data is from <a href="https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/edit#gid=0" class="sheet-link">the Google sheet</a> put together by <a href="https://twitter.com/anjali_x">Anjali</a> using information from Marcus Rashford and others.</p>
+			<p>This uses <a href="https://geoportal.statistics.gov.uk/datasets/national-statistics-postcode-lookup-august-2020">postcode lookup data from the Office of National Statistics</a> released under the Open Government Licence with the following additional attribution:</p>
+			<ul>
+				<li>Contains OS data © Crown copyright and database right 2020</li>
+				<li>Contains Royal Mail data © Royal Mail copyright and database right 2020</li>
+				<li>Source: Office for National Statistics licensed under the Open Government Licence v.3.0</li>
+			</ul>
+
+		</div>
+	</footer>
+</body>
+</html>
+

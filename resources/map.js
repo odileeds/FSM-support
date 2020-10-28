@@ -112,18 +112,39 @@
 		return this;
 	};
 
-	ODI.FSM = function(a,opts){
-		this.sheetid = "";
+	ODI.FSM = function(opts){
 		if(!opts) opts = {};
 		this.opts = opts;
-		this.el = a;
-		this.href = a.getAttribute('href');
+		this.name = "FSM-support";
 		this.postcodes = {'loading':{},'loaded':{},'lookup':{}};
 		var _obj = this;
 		console.info('Map inspired by Marcus Rashford\'s campaign for Free School Meals. Sign his petition at https://petition.parliament.uk/petitions/554276/');
-		
+
+		this.sources = {
+			'anjali': {
+				'name': 'Anjali / Marcus Rashford',
+				'id': 'sheet-anjali',
+				'href': 'https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/edit',
+				'url': (location.href.indexOf('file')==0 ? 'data/data.csv' : 'https://docs.google.com/spreadsheets/d/106f8g5TUtBm7cB7RSXJQCC7eaLM_4Xf4RCliaStyuGw/gviz/tq?tqx=out:csv&sheet=details'),
+				'data': [],
+				'header': {},
+				'class': 'c3-bg',
+				'edit': 'Source: Anjali - Help improve the data'
+			},
+			'alltogether': {
+				'name': 'All Of Us Together',
+				'id': 'sheet-all-together',
+				'href': 'https://allofustogether.uk/',
+				'url': (location.href.indexOf('file')==0 ? 'data/all-of-us-together.csv' : 'https://docs.google.com/spreadsheets/d/1EesLuKPJG970wu7mcmqMgWCxGSKm1cwn2LlBMbNKHLk/gviz/tq?tqx=out:csv&sheet=details'),
+				'data': [],
+				'header': {},
+				'columnmap': {'Org Name':'Name','Town/City':'Town','County':'City/Region','Other info or description about the free meals':'More details','How to claim the meal':'How to claim','The URL of their announcement':'Link to post','Street Address 1 (building number + street)':'Address 1','Street Address 2':'Address 2','What time does the organisation open?':'Opens','What time does the organisation close?':'Closing','Which days are the meals available?':'Days','What is the organisation\'s phone number? Please include the area code.':'Phone number','The website of the organisation giving the free meals':'Website'},
+				'class': 'c7-bg',
+				'edit': 'Source: All Of Us Together'
+			}
+		};
+
 		this.init = function(){
-			var href = this.href.replace(/spreadsheets\/d\/([^\/]+)\//,function(m,p1){ _obj.sheetid = p1; return p1; });
 			this.makeMap();
 			this.get();
 			return this;
@@ -143,28 +164,26 @@
 		});
 
 		this.get = function(){
+
+			var lid,el,src,ul;
+
 			// Reset the data
-			this.data = [];
-			this.header = {};
 			this.toload = 0;
 			this.loaded = 0;
-
-			this.sources = {
-				'anjali': {
-					'name': 'Google Sheet',
-					'url': (location.href.indexOf('file')==0 ? 'data/data.csv' : 'https://docs.google.com/spreadsheets/d/'+this.sheetid+'/gviz/tq?tqx=out:csv&sheet=details'),
-					'data': [],
-					'header': {},
-					'edit': 'Something not quite right? <a href="'+this.href+'">Help improve the data</a>'
-				}/*,
-				'alltogether': {
-					'name': 'All Of Us Together',
-					'url': 'all-of-us-together.csv',
-					'data': [],
-					'header': {},
-					'edit': 'Data from: All Of Us Together'
-				}*/
-			};
+			
+			el = document.getElementById('output');
+			el.innerHTML = '<p>List contains <span id="listtotal"></span> <span id="maptotal"></span>:</p>';
+			for(src in this.sources){
+				// Add list holders
+				lid = this.sources[src].id+'-list';
+				if(!el.querySelector('#'+lid)){
+					ul = document.createElement('ul');
+					ul.setAttribute('id',lid);
+					el.appendChild(ul);
+				}
+				// Increment number of sources to load
+				this.toload++;
+			}
 
 			for(var src in this.sources){
 				console.info('Getting '+this.sources[src].url);
@@ -186,7 +205,10 @@
 		
 		this.getPostcode = function(pcd,callback){
 			var ocd,parea,district,sector;
+
+			// Extract the outcode and sector
 			pcd.replace(/^([^\s]+) ([0-9A-Z])/,function(m,p1,p2){ ocd = p1; sector = p2; return ""; });
+
 			if(ocd){
 				ocd.replace(/^([A-Z]{1,2})([0-9]+|[0-9][A-Z])$/,function(m,p1,p2){ parea = p1; district = p2; return ""; });
 				var path = parea+'/'+district+'/'+sector;
@@ -214,7 +236,7 @@
 					})
 					
 				}else{
-					console.warn('No path '+path);
+					console.warn('No path '+path,ocd);
 					if(typeof callback==="function") callback.call(this,pcd,this.postcodes.lookup[pcd]);
 				}
 				
@@ -228,68 +250,114 @@
 		
 		this.update = function(d,src){
 			
-			var hrow = 0;
-			for(var r = 0; r < d.length; r++){
-				if(d[r][0]=="Name"){
+			var hrow,r,c,i,list,pcd,el,lid,ul,loc,s;
+			
+			this.sources[src].toload = 0;
+			this.sources[src].loaded = 0;
+
+			function cleanPostcode(pcd){
+				if(pcd){
+					// Remove trailing/leading spaces
+					pcd = pcd.replace(/(^ | $)/g,"");
+					
+					// Remove non alpha-numeric-space characters
+					pcd = pcd.replace(/[^0-9A-Z\s]/g,"");
+
+					// Remove N/A or "-" values
+					if(pcd == "-" || pcd.indexOf(/N\/A/i)>=0) pcd = "";
+
+					// Remove long values
+					if(pcd.length > 8 || pcd.length < 5) pcd = "";
+
+					// Add a space if there isn't one
+					if(pcd.indexOf(" ") < 0 && pcd.length >= 5){
+						pcd = pcd.replace(/([0-9][A-Z]{2})$/,function(m,p1){ return " "+p1; });
+					}
+				}
+				return pcd;
+			}
+			hrow = 0;
+			for(r = 0; r < d.length; r++){
+				if(d[r][0]=="Name" || d[r][0]=="Org Name"){
 					hrow = r;
 					r = d.length;
 				}
 			}
 
 			// Name	Town	City/Region	Postcode	Specific schools?	How to claim	Link to post	More details
-			for(var c = 0; c < d[hrow].length; c++){
+			for(c = 0; c < d[hrow].length; c++){
+				// Map column headings
+				if(this.sources[src].columnmap && this.sources[src].columnmap[d[hrow][c]]){
+					d[hrow][c] = this.sources[src].columnmap[d[hrow][c]];
+				}
 				if(d[hrow][c]) this.sources[src].header[d[hrow][c]] = c;
 			}
-			var pcd;
 			console.info('Header starts on line '+hrow);
-			for(var i = hrow+1; i < d.length; i++){
+			for(i = hrow+1; i < d.length; i++){
 				o = {};
 				if(d[i][this.sources[src].header['Postcode']]) d[i][this.sources[src].header['Postcode']] = d[i][this.sources[src].header['Postcode']].toUpperCase();
 				for(c = 0; c < d[i].length; c++){
 					if(typeof this.sources[src].header[d[hrow][c]]==="number") o[d[hrow][c]] = d[i][c];
 				}
-				pcd = d[i][this.sources[src].header['Postcode']];
-				if(pcd && !this.postcodes.lookup[pcd]) this.toload++;
+
+				o['_postcode'] = cleanPostcode(d[i][this.sources[src].header['Postcode']]);
+
+				if(o['_postcode'] && typeof this.postcodes.lookup[o['_postcode']]==="undefined") this.sources[src].toload++;
 				this.sources[src].data.push(o);
 			}
 			list = '';
-			for(var i = 0; i < this.sources[src].data.length; i++){
+			s = this.sources[src];
+			for(i = 0; i < s.data.length; i++){
 				list += '<li>';
 				list += '<div class="padded b5-bg">';
-				list += '<h3>'+this.sources[src].data[i]['Name']+'</h3>';
-				list += '<p>Location: '+(this.sources[src].data[i]['Town']||"");
-				if(this.sources[src].data[i]['City/Region']) list += ', '+(this.sources[src].data[i]['City/Region']);
-				if(this.sources[src].data[i]['Postcode']) list += ', '+this.sources[src].data[i]['Postcode'];
-				list += '</p>';
-				if(this.sources[src].data[i]['How to claim']) list += '<p>How to claim: '+this.sources[src].data[i]['How to claim']+'</p>';
-				if(this.sources[src].data[i]['More details']) list += '<p>More details: '+this.sources[src].data[i]['More details']+'</p>';
-				if(this.sources[src].data[i]['Link to post']){
-					list += '<p><a href="'+this.sources[src].data[i]['Link to post']+'">Link to original post';
-					if(this.sources[src].data[i]['Link to post'].indexOf('twitter.com')>0) list += ' on Twitter';
-					if(this.sources[src].data[i]['Link to post'].indexOf('facebook.com')>0) list += ' on Facebook';
+				list += '<h3>'+s.data[i]['Name']+'</h3>';
+				list += '<p><strong>Location:</strong> ';
+				loc = '';
+				if(s.data[i]['Street Address 1 (building number + street)']) loc += (loc ? ', ':'')+s.data[i]['Street Address 1 (building number + street)'];
+				if(s.data[i]['Town']) loc += (loc ? ', ':'')+s.data[i]['Town'];
+				if(s.data[i]['City/Region']) loc += (loc ? ', ':'')+s.data[i]['City/Region'];
+				if(s.data[i]['Postcode']) loc += (loc ? ', ':'')+s.data[i]['Postcode'];
+				list += loc+'</p>';
+				if(s.data[i]['How to claim']) list += '<p><strong>How to claim:</strong> '+s.data[i]['How to claim']+'</p>';
+				if(s.data[i]['More details']) list += '<p><strong>More details:</strong> '+s.data[i]['More details']+'</p>';
+				if(s.data[i]['Link to post']){
+					list += '<p><a href="'+s.data[i]['Link to post']+'">Link to original post';
+					if(s.data[i]['Link to post'].indexOf('twitter.com')>0) list += ' on Twitter';
+					if(s.data[i]['Link to post'].indexOf('facebook.com')>0) list += ' on Facebook';
 					list += '</a></p>';
 				}
 				list += '</div>';
+				list += '<a href="'+s.href+'" class="source '+(s['class']||'b2-bg')+'">'+s.edit.replace(/\%HREF\%/g,s.href)+'</a>';
 				list += '</li>'
 			}
+			el = document.getElementById('output');
+			lid = this.sources[src].id+'-list';
+			ul = el.querySelector('#'+lid);
+			ul.innerHTML = list;
 
-			var ul = document.getElementById('output');
-			ul.innerHTML = '<p>List contains '+this.sources[src].data.length+' places<span id="maptotal"></span>:</p><ul>'+list+'</ul>';
-
-			if(this.toload > this.loaded){
-				for(var i = 0; i < this.sources[src].data.length; i++){
-					if(this.sources[src].data[i]['Postcode']){
-						if(!this.postcodes.lookup[this.sources[src].data[i]['Postcode']]){
-							this.getPostcode(this.sources[src].data[i]['Postcode'],function(pcd,pos){
-								this.loaded++;
-								if(this.toload==this.loaded) this.addToMap();
+			if(this.sources[src].toload > this.sources[src].loaded){
+				for(i = 0; i < this.sources[src].data.length; i++){
+					pcd = this.sources[src].data[i]['_postcode']
+					if(pcd){
+						if(typeof this.postcodes.lookup[pcd]==="undefined"){
+							console.log('Trying to find '+pcd);
+							this.getPostcode(pcd,function(pcd,pos){
+								this.sources[src].loaded++;
+								if(this.sources[src].toload==this.sources[src].loaded) this.loadedSource(src);
 							});
 						}
 					}
 				}
 			}
-			if(this.toload==this.loaded) this.addToMap();
+			if(this.sources[src].toload==this.sources[src].loaded) this.loadedSource(src);
 			
+			return this;
+		}
+		
+		this.loadedSource = function(src){
+			console.info('Loaded: '+this.sources[src].name);
+			this.loaded++;
+			if(this.toload == this.loaded) this.addToMap();
 			return this;
 		}
 		
@@ -320,19 +388,21 @@
 			});
 
 			var total = 0;
+			var ltotal = 0;
 			var src,i;
 			for(src in this.sources){
+				ltotal += this.sources[src].data.length;
 				for(i = 0; i < this.sources[src].data.length; i++){
-					pcd = this.sources[src].data[i]['Postcode'];
+					pcd = this.sources[src].data[i]['_postcode'];
 					if(pcd){
-						if(this.postcodes.lookup[pcd]){
+						if(typeof this.postcodes.lookup[pcd]==="object"){
 							feature = {'type':'Feature','properties':this.sources[src].data[i],'geometry':{'type':'Point','coordinates':this.postcodes.lookup[pcd]}};
 							feature.properties._src = this.sources[src];
 							tempmark = L.marker([this.postcodes.lookup[pcd][1],this.postcodes.lookup[pcd][0]],{icon: makeMarker('#D60303')}).bindPopup(buildDefaultPopup(feature,""));
 							markerList.push(tempmark);
 							total++;
 						}else{
-							console.error('Failed to lookup '+pcd+' from '+this.sources[src].name);
+							this.message('Failed to find <em>'+pcd+'</em> for '+this.sources[src].data[i]['Name']+', '+this.sources[src].data[i]['Town']+' ('+this.sources[src].name+')',{'id':this.sources[src].id+'-msg','append':true,'type':'ERROR'});
 						}
 					}
 				}
@@ -341,6 +411,7 @@
 			this.nodes.addLayers(markerList);
 			this.map.addLayer(this.nodes);
 			
+			document.getElementById('listtotal').innerHTML = ltotal+' places';
 			document.getElementById('maptotal').innerHTML = " ("+total+" with postcodes included on the map)";
 			
 			return this;
@@ -361,7 +432,11 @@
 			this.map = L.map(id,{'layers':[this.baseMaps[this.selectedBaseMap]],'center': [53.4629,-2.2916],'zoom':6,'scrollWheelZoom':true});
 			
 			// Update attribution
-			this.map.attributionControl.setPrefix('Data: <a href="'+this.href+'">Anjali / Marcus Rashford</a>').setPosition('bottomleft');
+			var prefix = "";
+			for(var src in this.sources){
+				prefix += (prefix ? ' / ' : '')+'<a href="'+this.sources[src].href+'">'+this.sources[src].name+'</a>';
+			}
+			this.map.attributionControl.setPrefix('Data: '+prefix).setPosition('bottomleft');
 
 			var icon = L.Icon.extend({
 				options: {
@@ -377,6 +452,55 @@
 			return this;
 		}
 
+		this.log = function(){
+			if(this.logging || arguments[0]=="ERROR"){
+				var args = Array.prototype.slice.call(arguments, 0);
+				if(console && typeof console.log==="function"){
+					if(arguments[0] == "ERROR") console.error('%c'+this.name+'%c: '+args[1],'font-weight:bold;','',(args.splice(2).length > 0 ? args.splice(2):""));
+					else if(arguments[0] == "WARNING") console.warn('%c'+this.name+'%c: '+args[1],'font-weight:bold;','',(args.splice(2).length > 0 ? args.splice(2):""));
+					else console.log('%c'+this.name+'%c: '+args[1],'font-weight:bold;','',(args.splice(2).length > 0 ? args.splice(2):""));
+				}
+			}
+			return this;
+		};
+
+		this.message = function(msg,attr){
+			if(!attr) attr = {};
+			if(!attr.id) attr.id = 'default';
+			if(!attr['type']) attr['type'] = 'message';
+			if(msg) this.log(attr['type'],msg.replace(/<[^\>]*>/g,""));
+			var css = "b5-bg";
+			if(attr['type']=="ERROR") css = "c12-bg";
+			if(attr['type']=="WARNING") css = "c14-bg";
+
+			var msgel = document.querySelector('.message');
+			if(!msgel) return this;
+		
+			if(!msg){
+				if(msgel.length > 0){
+					// Remove the specific message container
+					if(msgel.getElementById(attr.id)){
+						msgel.getElementById(attr.id).parentNode().removeChild(msgel.getElementById(attr.id));
+					}
+				}
+			}else if(msg){
+				// Pad the container
+				//msgel.parent().addClass('padded');
+				// We make a specific message container
+				if(!msgel.querySelector('#'+attr.id)){
+					var div = document.createElement('div');
+					div.setAttribute('id',attr.id);
+					div.innerHTML = '<div class="holder padded"></div>';
+					msgel.appendChild(div);
+				}
+				msgel = msgel.querySelector('#'+attr.id);
+				msgel.classList.add(css);
+				if(attr.append) msgel.querySelector('.holder').innerHTML += (msgel.querySelector('.holder').innerHTML.length > 0 ? '<br />' : '')+msg;
+				else msgel.querySelector('.holder').innerHTML = msg;
+			}
+
+			return this;
+		};
 		function makeMarker(colour){
 			return L.divIcon({
 				'className': '',
@@ -390,21 +514,7 @@
 		}
 		function buildDefaultPopup(feature,popup){
 			// does this feature have a property named popupContent?
-			if(feature.properties){
-				
-				// If this feature has a default popup
-				// Convert "other_tags" e.g "\"ele:msl\"=>\"105.8\",\"ele:source\"=>\"GPS\",\"material\"=>\"stone\""
-				if(feature.properties.other_tags){
-					tags = feature.properties.other_tags.split(/,/);
-					for(var t = 0; t < tags.length; t++){
-						tags[t] = tags[t].replace(/\"/g,"");
-						bits = tags[t].split(/\=\>/);
-						if(bits.length == 2){
-							if(!feature.properties[bits[0]]) feature.properties[bits[0]] = bits[1];
-						}
-					}
-				}
-			
+			if(feature.properties){			
 				if(feature.properties && feature.properties.popup){
 					popup = feature.properties.popup.replace(/\n/g,"<br />");
 				}
@@ -417,7 +527,7 @@
 				var added = 0;
 				if(feature.properties){
 					for(var f in feature.properties){
-						if(f != "Name" && f!="name" && f!="title" && f!="other_tags" && (typeof feature.properties[f]==="number" || (typeof feature.properties[f]==="string" && feature.properties[f].length > 0))){
+						if(f != "Name" && f!="name" && f!="title" && f!="other_tags" && f.indexOf("_")!=0 && (typeof feature.properties[f]==="number" || (typeof feature.properties[f]==="string" && feature.properties[f].length > 0))){
 							popup += (added > 0 ? '<br />':'')+'<strong>'+f+':</strong> '+(typeof feature.properties[f]==="string" && feature.properties[f].indexOf("http")==0 ? '<a href="'+feature.properties[f]+'" target="_blank">'+feature.properties[f]+'</a>' : feature.properties[f])+'';
 							added++;
 						}
@@ -425,7 +535,7 @@
 				}
 				popup += '</div>';
 			}
-			if(feature.properties._src.edit) popup += '<p style="border-top: 1px solid #000; padding-top:0.25em;font-size: 0.8em;">'+feature.properties._src.edit+'</p>';
+			if(feature.properties._src.edit) popup += '<p class="more"><a href="'+feature.properties._src.href+'">'+feature.properties._src.edit+'</a></p>';
 			if(popup){
 				if(popup.indexOf("{{") >= 0){
 					//popup = popup.replace(new RegExp(/\%IF ([^\s]+) (.*) ENDIF\%/,"g"),function(str,p1,p2){ return (feature.properties[p1] && feature.properties[p1] != "N/a" ? p2 : ''); });
@@ -531,13 +641,7 @@
 
 	ODI.ready(function(){
 
-		
-		
-		var a = document.querySelector('a.sheet-link');
-		var href = a.getAttribute('href');
-		if(href.indexOf('https://docs.google.com/spreadsheets')==0){
-			fsm = new ODI.FSM(a,{'map':document.getElementById('location')});
-		}
+		fsm = new ODI.FSM({'map':document.getElementById('location')});
 
 	});
 
