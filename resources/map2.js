@@ -340,6 +340,7 @@
 				for(i = 0; i < this.sources[src].data.length; i++){
 					if(this.sources[src].data[i]['_postcode']){
 						if(!this.postcodes.lookup[this.sources[src].data[i]['_postcode']]){
+							console.log('Getting '+this.sources[src].data[i]['_postcode']);
 							this.getPostcode(this.sources[src].data[i]['_postcode'],function(pcd,pos){
 								this.sources[src].loaded++;
 								if(this.sources[src].toload==this.sources[src].loaded) this.loadedSource(src);
