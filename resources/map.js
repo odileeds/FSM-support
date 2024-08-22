@@ -220,7 +220,7 @@
 					});
 				}
 			}
-			setTimeout(function(){ _obj.get(); },300000);
+			//setTimeout(function(){ _obj.get(); },300000);
 			return this;
 		};
 		
